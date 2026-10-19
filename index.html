@@ -6,6 +6,7 @@
     <title>Подготовка - Твой путь к успеху</title>
     <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="css/style.css">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22%3E%3Ctext y=%22.9em%22 font-size=%2290%22%3E%F0%9F%8E%93%3C/text%3E%3C/svg%3E">
 </head>
 <body>
     <div class="bg-blob bg-blob-1"></div>
@@ -39,34 +40,30 @@
         </div>
         <nav class="nav-links">
             <a onclick="showPage('home-page')" data-i18n="nav-home">Home</a>
-            <a onclick="showPage('teacher-login-page')" style="background:rgba(255,255,255,0.15); border-radius:6px;">👩‍🏫 Учитель</a>
+            <a onclick="showPage('teacher-login-page')" style="background:rgba(255,255,255,0.15); border-radius:6px;" data-i18n="t-nav-link">👩‍🏫 Учитель</a>
             <a onclick="showPage('subject-selection')" data-i18n="nav-subjects">Предметы</a>
             <div class="lang-switcher">
                 <button class="lang-btn active" id="lang-ru" onclick="setLanguage('ru')">RU</button>
                 <button class="lang-btn" id="lang-kk" onclick="setLanguage('kk')">KZ</button>
-                <button class="theme-toggle" id="theme-btn" onclick="toggleTheme()" title="Сменить тему">☀️</button>
+                <button class="theme-toggle" id="theme-btn" onclick="toggleTheme()" title="Сменить тему" data-i18n-title="theme-title">☀️</button>
             </div>
         </nav>
     </header>
 
     <section id="login-page" style="display: flex; flex-direction: column; align-items: center; justify-content: center; height: calc(100vh - 65px);">
-        <h2 style="font-size: 32px; color: #ffffff; margin-bottom: 10px;">Добро пожаловать!</h2>
+        <h2 style="font-size: 32px; color: #ffffff; margin-bottom: 10px;" data-i18n="login-welcome">Добро пожаловать!</h2>
         <p style="margin-bottom: 25px; font-size: 18px; color: var(--text-gray);" data-i18n="login-desc">Введи своё имя и выбери учителя.</p>
-        <input type="text" id="studentName" placeholder="Имя и фамилия" style="padding: 15px; font-size: 18px; border-radius: 10px; border: 2px solid var(--primary-blue); margin-bottom: 15px; width: 300px; text-align: center; outline: none;">
+        <input type="text" id="studentName" placeholder="Имя и фамилия" data-i18n-ph="login-name-ph" maxlength="60" autocomplete="name" style="padding: 15px; font-size: 18px; border-radius: 10px; border: 2px solid var(--primary-blue); margin-bottom: 15px; width: 300px; text-align: center; outline: none;">
         <select id="teacherSelect" style="padding: 15px; font-size: 16px; border-radius: 10px; border: 2px solid var(--primary-blue); margin-bottom: 20px; width: 300px; outline: none; font-family: inherit; color: var(--text-dark);">
-            <option value="">— Выбери учителя —</option>
-            <option value="Учитель 1">Учитель 1</option>
-            <option value="Учитель 2">Учитель 2</option>
-            <option value="Учитель 3">Учитель 3</option>
-            <option value="Учитель 4">Учитель 4</option>
-            <option value="Учитель 5">Учитель 5</option>
+            <option value="" data-i18n="login-teacher-ph">— Выбери учителя —</option>
+            <!-- список учителей берётся из TEACHERS в data/config.js -->
         </select>
         <button class="btn" style="background: var(--primary-blue); font-size: 18px; padding: 15px 40px;" onclick="registerStudent()" data-i18n="login-btn">Войти</button>
     </section>
 
     <section id="home-page" style="display: flex;">
         <div class="hero-content">
-            <h1 class="hero-title"><span>Подготовка</span><br>к успеху</h1>
+            <h1 class="hero-title" data-i18n="hero-title"><span>Подготовка</span><br>к успеху</h1>
             <p style="font-size: 18px; color: var(--text-gray); margin-bottom: 30px;" data-i18n="hero-desc">Твой персональный помощник в подготовке к экзаменам.</p>
             <button class="btn" style="background:var(--primary-blue); padding: 15px 40px; font-size: 18px; font-weight: 800;" onclick="showPage('subject-selection')" data-i18n="start-btn">Начать обучение</button>
         </div>
@@ -80,7 +77,7 @@
 
     <section id="subject-selection">
         <h2 style="font-size: 34px; color: #ffffff; margin-bottom: 10px; font-family: 'Space Grotesk', sans-serif; font-weight: 700;" data-i18n="subject-title">Какой предмет учим сегодня?</h2>
-        <p style="color: var(--text-gray); font-size: 15px; margin-bottom: 44px; font-weight: 600;">Выбери и начни прямо сейчас</p>
+        <p style="color: var(--text-gray); font-size: 15px; margin-bottom: 44px; font-weight: 600;" data-i18n="subject-sub">Выбери и начни прямо сейчас</p>
         <div class="selection-container">
             <div class="subject-card math-card" onclick="selectBaseSubject('math')">
                 <div class="subject-icon">📐</div>
@@ -100,7 +97,7 @@
             <div class="deco-orb"></div>
             <div class="deco-orb"></div>
             <div class="deco-orb"></div>
-            <span class="deco-label">Выбери свой путь</span>
+            <span class="deco-label" data-i18n="deco-label">Выбери свой путь</span>
         </div>
     </section>
 
@@ -206,15 +203,15 @@
             <ul>
                 <li style="margin-bottom: 15px;">
                     <span data-i18n="les2-prop1"><b>Сложение и вычитание:</b> Складывать можно только куски одинакового размера! Нужно найти <b>общий знаменатель</b>.</span><br>
-                    <i>Мысал/Пример: <span class="frac"><span class="num">1</span><span class="den">5</span></span> + <span class="frac"><span class="num">2</span><span class="den">5</span></span> = <span class="frac"><span class="num">3</span><span class="den">5</span></span>.</i>
+                    <i><span data-i18n="ex">Пример:</span> <span class="frac"><span class="num">1</span><span class="den">5</span></span> + <span class="frac"><span class="num">2</span><span class="den">5</span></span> = <span class="frac"><span class="num">3</span><span class="den">5</span></span>.</i>
                 </li>
                 <li style="margin-bottom: 15px;">
                     <span data-i18n="les2-prop2"><b>Умножение:</b> Тут всё просто. Верх умножаем на верх, низ на низ.</span><br>
-                    <i>Мысал/Пример: <span class="frac"><span class="num">1</span><span class="den">2</span></span> &middot; <span class="frac"><span class="num">3</span><span class="den">4</span></span> = <span class="frac"><span class="num">3</span><span class="den">8</span></span>.</i>
+                    <i><span data-i18n="ex">Пример:</span> <span class="frac"><span class="num">1</span><span class="den">2</span></span> &middot; <span class="frac"><span class="num">3</span><span class="den">4</span></span> = <span class="frac"><span class="num">3</span><span class="den">8</span></span>.</i>
                 </li>
                 <li style="margin-bottom: 15px;">
                     <span data-i18n="les2-prop3"><b>Деление:</b> Вторую дробь переворачиваем вверх ногами, а знак деления меняем на умножение.</span><br>
-                    <i>Мысал/Пример: <span class="frac"><span class="num">1</span><span class="den">2</span></span> : <span class="frac"><span class="num">1</span><span class="den">3</span></span> = <span class="frac"><span class="num">1</span><span class="den">2</span></span> &middot; <span class="frac"><span class="num">3</span><span class="den">1</span></span> = <span class="frac"><span class="num">3</span><span class="den">2</span></span>.</i>
+                    <i><span data-i18n="ex">Пример:</span> <span class="frac"><span class="num">1</span><span class="den">2</span></span> : <span class="frac"><span class="num">1</span><span class="den">3</span></span> = <span class="frac"><span class="num">1</span><span class="den">2</span></span> &middot; <span class="frac"><span class="num">3</span><span class="den">1</span></span> = <span class="frac"><span class="num">3</span><span class="den">2</span></span>.</i>
                 </li>
             </ul>
 
@@ -242,454 +239,20 @@
                 <button class="btn" style="background:var(--primary-blue); font-size: 18px;" onclick="showPage('variant-selection')" data-i18n="les-btn-next">Перейти к вариантам →</button>
             </div>
         </div>
-        <div id="lesson-3" class="quiz-container lesson-text" style="display: none;">
-            <h2>💸 Что такое проценты?</h2>
-    
-            <p><b>Процент (%)</b> — это одна сотая часть числа.</p>
-            <div class="lesson-box">
-                1% = 1/100
-            </div>
-
-            <h3>📌 Как считать?</h3>
-            <div class="lesson-box">
-                Число × процент
-            </div>
-
-            <p>Пример: 10% от 700000 = 700000 × 0.1 = 70000</p>
-
-            <h3>📈 Сложные проценты</h3>
-            <div class="lesson-box">
-                S = P × (1 + p)^n
-            </div>
-
-            <p>700000 × (1.1)^2 = <b>847000</b></p>
-
-            <div class="lesson-tasks">
-                <p>1. 20% от 500 = <input id="l3-ans-1" class="lesson-input"></p>
-                <p>2. 10% от 3000 = <input id="l3-ans-2" class="lesson-input"></p>
-                <p>3. 1000 под 10% = <input id="l3-ans-3" class="lesson-input"></p>
-            </div>
-
-            <button class="btn" style="background:green;" onclick="checkLesson(3)">
-                Проверить
-            </button>
-        </div>
-        <div id="lesson-4" class="quiz-container lesson-text" style="display: none;">
-            <h2>📊 Что такое неравенства?</h2>
-
-            <p><b>Неравенство</b> — это когда числа не равны:</p>
-            <div class="lesson-box">
-                > больше<br>
-                < меньше<br>
-                ≥ больше или равно<br>
-                ≤ меньше или равно
-            </div>
-
-            <h3>📌 Главное правило</h3>
-            <div class="lesson-box">
-                Если умножаешь или делишь на отрицательное число → знак меняется!
-            </div>
-
-            <h3>🧠 Примеры</h3>
-            <p>1) x + 3 > 5 → x > 2</p>
-            <p>2) 2x < 10 → x < 5</p>
-            <p>3) -2x > 6 → x < -3 (знак поменяли!)</p>
-
-            <h3>🏋️ Попробуй сам:</h3>
-
-            <div class="lesson-tasks">
-            <p>1. x + 5 > 10 → x > <input id="l4-ans-1" class="lesson-input"></p>
-            <p>2. 3x < 12 → x < <input id="l4-ans-2" class="lesson-input"></p>
-            <p>3. -2x > 8 → x < <input id="l4-ans-3" class="lesson-input"></p>
-            </div>
-
-            <button class="btn" style="background:green;" onclick="checkLesson(4)">
-                Проверить
-            </button>
-        </div>
-        <div id="lesson-5" class="quiz-container lesson-text" style="display: none;">
-            <h2>📘 Теорема Виета (очень просто)</h2>
-
-            <p>Есть квадратное уравнение:</p>
-            <div class="lesson-box">
-                x² + bx + c = 0
-            </div>
-
-            <h3>📌 Формулы Виета:</h3>
-            <div class="lesson-box">
-                x₁ + x₂ = -b <br>
-                x₁ · x₂ = c
-            </div>
-
-            <p>👉 То есть:</p>
-            <ul>
-                <li>сумма корней = -b</li>
-                <li>произведение = c</li>
-            </ul>
-
-            <h3>🧠 Пример:</h3>
-            <p>x² - 5x + 6 = 0</p>
-
-            <p>
-                x₁ + x₂ = 5 <br>
-                x₁ · x₂ = 6
-            </p>
-
-            <p><b>Ответ:</b> 2 и 3</p>
-
-            <h3>🏋️ Попробуй сам:</h3>
-
-            <div class="lesson-tasks">
-                <p>1. x² - 7x + 10 → корни: <input id="l5-ans-1" class="lesson-input"></p>
-                <p>2. x² - 6x + 9 → корни: <input id="l5-ans-2" class="lesson-input"></p>
-                <p>3. x² - 5x + 6 → корни: <input id="l5-ans-3" class="lesson-input"></p>
-            </div>
-
-            <p style="font-size:14px; color:gray;">Пиши через запятую: например 2,3</p>
-
-            <button class="btn" style="background:green;" onclick="checkLesson(5)">
-                Проверить
-            </button>
-        </div>
-        <div id="lesson-6" class="quiz-container lesson-text" style="display: none;">
-            <h2>📈 Квадратная функция (график)</h2>
-            <img src="q6.png" style="width:100%; max-width:400px; margin:20px 0; border-radius:10px;">
-            <p>Функция выглядит так:</p>
-            <div class="lesson-box">
-                y = ax² + bx + c
-            </div>
-
-            <h3>📌 Как определить знаки?</h3>
-
-            <ul>
-                <li><b>a</b> — направление ветвей:</li>
-                <li>вверх → a > 0</li>
-                <li>вниз → a < 0</li>
-            </ul>
-
-            <ul>
-                <li><b>c</b> — пересечение с осью Y:</li>
-                <li>выше 0 → c > 0</li>
-                <li>ниже 0 → c < 0</li>
-            </ul>
-
-            <ul>
-                <li><b>b</b> — куда смещена вершина:</li>
-                <li>вершина справа → b < 0</li>
-                <li>вершина слева → b > 0</li>
-            </ul>
-
-            <h3>🧠 Пример (как у тебя на картинке)</h3>
-
-            <p>
-                Ветви вверх → a > 0 <br>
-                Пересечение ниже 0 → c < 0 <br>
-                Вершина справа → b < 0
-            </p>
-
-            <p><b>Ответ:</b> a > 0, b < 0, c < 0</p>
-
-            <h3>🏋️ Попробуй сам:</h3>
-            <img src="Pp.png" style="width:100%; max-width:400px; margin:20px 0; border-radius:10px;">
-            <div class="lesson-tasks">
-                <p>1. Ветви вверх → a <input id="l6-ans-1" class="lesson-input"></p>
-                <p>2. Пересечение выше 0 → c <input id="l6-ans-2" class="lesson-input"></p>
-                <p>3. Вершина слева → b <input id="l6-ans-3" class="lesson-input"></p>
-            </div>
-
-            <p style="font-size:14px;">Пиши: >0 или <0</p>
-
-            <button class="btn" style="background:green;" onclick="checkLesson(6)">
-                Проверить
-            </button>
-        </div>
-        <div id="lesson-7" class="quiz-container lesson-text" style="display: none;">
-            <h2>🚤 Скорость в воде (лодка и течение)</h2>
-
-            <p>Есть 3 скорости:</p>
-            <div class="lesson-box">
-                v<sub>собств</sub> — скорость лодки в стоячей воде <br>
-                v<sub>теч</sub> — скорость течения
-            </div>
-
-            <h3>📌 Формулы:</h3>
-            <div class="lesson-box">
-                По течению: v = v<sub>собств</sub> + v<sub>теч</sub><br>
-                Против течения: v = v<sub>собств</sub> - v<sub>теч</sub>
-            </div>
-
-            <h3>🧠 Пример:</h3>
-            <p>Лодка: 10 км/ч, течение: 2 км/ч</p>
-
-            <p>
-                По течению: 10 + 2 = <b>12</b><br>
-                Против: 10 - 2 = <b>8</b>
-            </p>
-
-            <h3>📌 Формула времени:</h3>
-            <div class="lesson-box">
-                t = s / v
-            </div>
-
-            <h3>🏋️ Попробуй сам:</h3>
-
-            <div class="lesson-tasks">
-                <p>1. 15 км/ч и 3 км/ч → по течению = <input id="l7-ans-1" class="lesson-input"></p>
-                <p>2. 15 км/ч и 3 км/ч → против = <input id="l7-ans-2" class="lesson-input"></p>
-                <p>3. 24 км путь, скорость 12 → время = <input id="l7-ans-3" class="lesson-input"></p>
-            </div>
-
-            <button class="btn" style="background:green;" onclick="checkLesson(7)">
-                Проверить
-            </button>
-        </div>
-        <div id="lesson-8" class="quiz-container lesson-text" style="display: none;">
-            <h2>📊 Что такое неравенства?</h2>
-
-            <p><b>Неравенство</b> — это когда числа не равны:</p>
-            <div class="lesson-box">
-                > больше<br>
-                < меньше<br>
-                ≥ больше или равно<br>
-                ≤ меньше или равно
-            </div>
-
-            <h3>📌 Главное правило</h3>
-            <div class="lesson-box">
-                Если умножаешь или делишь на отрицательное число → знак меняется!
-            </div>
-
-            <h3>🧠 Примеры</h3>
-            <p>1) x + 3 > 5 → x > 2</p>
-            <p>2) 2x < 10 → x < 5</p>
-            <p>3) -2x > 6 → x < -3 (знак поменяли!)</p>
-
-            <h3>🏋️ Попробуй сам:</h3>
-
-            <div class="lesson-tasks">
-            <p>1. x + 5 > 10 → x > <input id="l8-ans-1" class="lesson-input"></p>
-            <p>2. 3x < 12 → x < <input id="l8-ans-2" class="lesson-input"></p>
-            <p>3. -2x > 8 → x < <input id="l8-ans-3" class="lesson-input"></p>
-            </div>
-
-            <button class="btn" style="background:green;" onclick="checkLesson(8)">
-                Проверить
-            </button>
-        </div>
-        <div id="lesson-9" class="quiz-container lesson-text" style="display: none;">
-            <h2>🎲 Комбинаторика (очень просто)</h2>
-
-            <h3>📌 1. Правило умножения</h3>
-            <div class="lesson-box">
-                Если есть выборы: a способов и b способов → всего a × b
-            </div>
-
-            <p>Пример: 3 кофты и 2 штаны → 3 × 2 = <b>6</b></p>
-
-            <h3>📌 2. Перестановки (все варианты)</h3>
-            <div class="lesson-box">
-                n! = 1 × 2 × 3 × ... × n
-            </div>
-
-            <p>Пример: 3 человека → 3! = 6</p>
-
-            <h3>📌 3. Размещения</h3>
-            <div class="lesson-box">
-                A = n! / (n - k)!
-            </div>
-
-            <h3>📌 4. Сочетания</h3>
-            <div class="lesson-box">
-                C = n! / (k!(n-k)!)
-            </div>
-
-            <h3>🧠 Примеры:</h3>
-            <p>1) 4 человека → 4! = 24</p>
-            <p>2) 5 из 2 → C = 10</p>
-
-            <h3>🏋️ Попробуй сам:</h3>
-
-            <div class="lesson-tasks">
-                <p>1. 3 кофты и 4 штаны → <input id="l9-ans-1" class="lesson-input"></p>
-                <p>2. 4! = <input id="l9-ans-2" class="lesson-input"></p>
-                <p>3. C(5,2) = <input id="l9-ans-3" class="lesson-input"></p>
-            </div>
-
-            <button class="btn" style="background:green;" onclick="checkLesson(9)">
-                Проверить
-            </button>
-        </div> 
-        <div id="lesson-10" class="quiz-container lesson-text" style="display: none;">
-            <h2>📊 Дисперсия (очень просто)</h2>
-
-            <p>Дисперсия показывает, насколько числа разбросаны</p>
-
-            <h3>📌 Формула:</h3>
-            <div class="lesson-box">
-                D = среднее из (x - среднее)^2
-            </div>
-
-            <h3>🧠 Пример:</h3>
-            <p>Числа: 2, 4, 6</p>
-
-            <p>
-                Среднее: (2+4+6)/3 = 4 <br><br>
-                (2-4)² = 4 <br>
-                (4-4)² = 0 <br>
-                (6-4)² = 4 <br><br>
-                D = (4+0+4)/3 = <b>2.67</b>
-            </p>
-
-            <h3>🏋️ Попробуй сам:</h3>
-
-            <div class="lesson-tasks">
-                <p>1. Среднее чисел 1,3,5 = <input id="l10-ans-1"></p>
-                <p>2. (1-3)² = <input id="l10-ans-2"></p>
-                <p>3. Дисперсия ≈ <input id="l10-ans-3"></p>
-            </div>
-
-            <button onclick="checkLesson(10)">Проверить</button>
-        </div>
-        <div id="lesson-11" class="quiz-container lesson-text" style="display: none;">
-            <h2>🔬 Стандартный вид числа</h2>
-
-            <p>Запись вида:</p>
-            <div class="lesson-box">
-                a × 10ⁿ
-            </div>
-
-            <p>где 1 ≤ a < 10</p>
-
-            <h3>🧠 Примеры:</h3>
-            <p>1000 = 1 × 10³</p>
-            <p>0.01 = 1 × 10⁻²</p>
-
-            <h3>📌 Как делать:</h3>
-            <ul>
-                <li>двигаешь запятую</li>
-                <li>считаешь сколько шагов</li>
-            </ul>
-
-            <h3>🏋️ Практика:</h3>
-
-            <div class="lesson-tasks">
-                <p>1. 10000 = <input id="l11-ans-1"></p>
-                <p>2. 0.001 = <input id="l11-ans-2"></p>
-                <p>3. 5300 = <input id="l11-ans-3"></p>
-            </div>
-
-            <p style="font-size:14px;">Пиши: 5.3×10³</p>
-
-            <button onclick="checkLesson(11)">Проверить</button>
-        </div> 
-        <div id="lesson-12" class="quiz-container lesson-text" style="display: none;">
-            <h2>🧠 Упрощение выражений</h2>
-
-            <h3>📌 Правила:</h3>
-            <div class="lesson-box">
-                1) Скобки раскрываем <br>
-                2) Похожие складываем <br>
-                3) Сокращаем дроби
-            </div>
-
-            <h3>🧠 Пример:</h3>
-            <p>2(x + 3) = 2x + 6</p>
-            <p>x + 2x = 3x</p>
-            <p>6x / 3 = 2x</p>
-
-            <h3>🏋️ Практика:</h3>
-
-            <div class="lesson-tasks">
-                <p>1. 2(x+4) = <input id="l12-ans-1"></p>
-                <p>2. 3x + 2x = <input id="l12-ans-2"></p>
-                <p>3. 10x / 5 = <input id="l12-ans-3"></p>
-            </div>
-
-            <button onclick="checkLesson(12)">Проверить</button>
-        </div>
-        <div id="lesson-13" class="quiz-container lesson-text" style="display: none;">
-            <h2>📈 Геометрическая прогрессия</h2>
-
-            <p>Это последовательность, где каждый раз умножаем на число q</p>
-
-            <div class="lesson-box">
-                aₙ = a₁ × qⁿ⁻¹
-            </div>
-
-            <h3>📌 Сумма:</h3>
-            <div class="lesson-box">
-                S = a₁ (qⁿ - 1) / (q - 1)
-            </div>
-
-            <h3>🧠 Пример:</h3>
-            <p>2, 4, 8, 16 → q = 2</p>
-
-            <h3>🏋️ Практика:</h3>
-
-            <div class="lesson-tasks">
-                <p>1. 3, 6, 12 → q = <input id="l13-ans-1"></p>
-                <p>2. a₁=2, q=2, n=3 → aₙ = <input id="l13-ans-2"></p>
-                <p>3. 2,4,8 → сумма = <input id="l13-ans-3"></p>
-            </div>
-
-            <button onclick="checkLesson(13)">Проверить</button>
-        </div>
-        <div id="lesson-14" class="quiz-container lesson-text" style="display: none;">
-            <h2>📘 Бином Ньютона</h2>
-
-            <div class="lesson-box">
-                (a + b)² = a² + 2ab + b² <br>
-                (a + b)³ = a³ + 3a²b + 3ab² + b³
-            </div>
-
-            <h3>📌 Формула:</h3>
-            <div class="lesson-box">
-                (a + b)^n = C(n,k)a^(n-k)b^k
-            </div>
-
-            <h3>🧠 Пример:</h3>
-            <p>(x + 1)² = x² + 2x + 1</p>
-
-            <h3>🏋️ Практика:</h3>
-
-            <div class="lesson-tasks">
-                <p>1. (x+1)² = <input id="l14-ans-1"></p>
-                <p>2. (x+2)² = <input id="l14-ans-2"></p>
-                <p>3. (x+1)³ = <input id="l14-ans-3"></p>
-            </div>
-
-            <button onclick="checkLesson(14)">Проверить</button>
-        </div>
-        <div id="lesson-15" class="quiz-container lesson-text" style="display: none;">
-            <h2>📐 Тригонометрия (база)</h2>
-
-            <h3>📌 Основные значения:</h3>
-            <div class="lesson-box">
-                sin 30° = 1/2 <br>
-                cos 60° = 1/2 <br>
-                sin 90° = 1 <br>
-                cos 0° = 1
-            </div>
-
-            <h3>📌 Формулы:</h3>
-            <div class="lesson-box">
-                sin²x + cos²x = 1
-            </div>
-
-            <h3>🧠 Примеры:</h3>
-            <p>sin 30° = 0.5</p>
-            <p>cos 0° = 1</p>
-
-            <h3>🏋️ Практика:</h3>
-
-            <div class="lesson-tasks">
-                <p>1. sin 30° = <input id="l15-ans-1"></p>
-                <p>2. cos 60° = <input id="l15-ans-2"></p>
-                <p>3. sin²x + cos²x = <input id="l15-ans-3"></p>
-            </div>
-
-            <button onclick="checkLesson(15)">Проверить</button>
-        </div>
+        <!-- Уроки 3–15 подставляются из data/lessons.js (RU/KZ) -->
+        <div id="lesson-3" class="quiz-container lesson-text" style="display: none;"></div>
+        <div id="lesson-4" class="quiz-container lesson-text" style="display: none;"></div>
+        <div id="lesson-5" class="quiz-container lesson-text" style="display: none;"></div>
+        <div id="lesson-6" class="quiz-container lesson-text" style="display: none;"></div>
+        <div id="lesson-7" class="quiz-container lesson-text" style="display: none;"></div>
+        <div id="lesson-8" class="quiz-container lesson-text" style="display: none;"></div>
+        <div id="lesson-9" class="quiz-container lesson-text" style="display: none;"></div>
+        <div id="lesson-10" class="quiz-container lesson-text" style="display: none;"></div>
+        <div id="lesson-11" class="quiz-container lesson-text" style="display: none;"></div>
+        <div id="lesson-12" class="quiz-container lesson-text" style="display: none;"></div>
+        <div id="lesson-13" class="quiz-container lesson-text" style="display: none;"></div>
+        <div id="lesson-14" class="quiz-container lesson-text" style="display: none;"></div>
+        <div id="lesson-15" class="quiz-container lesson-text" style="display: none;"></div>
     </section>
 
     <section id="variant-selection">
@@ -703,9 +266,10 @@
         <div id="timer-display" class="timer-bar" style="display: none;">60:00</div>
         <div class="quiz-container">
             <h2 id="quiz-title" style="margin-bottom: 25px; text-align: center;">Предмет</h2>
+            <div id="strict-banner" class="strict-banner" style="display:none;"></div>
             <div class="grid" id="question-grid"></div>
             <div class="task-view" id="current-question-view" style="display: none;">
-                <h3 id="q-title">№1 Тапсырма</h3>
+                <h3 id="q-title">№1</h3>
                 <div id="q-content" style="margin-top: 20px;"></div>
                 <div id="options-btns" class="options-btns"></div>
                 <div class="action-buttons" style="margin-top: 20px; display: flex; gap: 10px;">
@@ -756,71 +320,81 @@
         </div>
 
         <div class="t-tabs">
-            <button class="t-tab active" id="tab-results-btn" onclick="switchTeacherTab('results')">📊 Результаты</button>
-            <button class="t-tab" id="tab-variants-btn" onclick="switchTeacherTab('variants')">✏️ Мои варианты</button>
+            <button class="t-tab active" id="tab-results-btn" onclick="switchTeacherTab('results')" data-i18n="t-tab-results">📊 Результаты</button>
+            <button class="t-tab" id="tab-variants-btn" onclick="switchTeacherTab('variants')" data-i18n="t-tab-variants">✏️ Мои варианты</button>
         </div>
 
         <div id="tab-results">
             <div class="t-filters">
-                <input type="text" id="t-search" placeholder="🔍 Поиск по имени..." oninput="teacherRenderTable()">
+                <input type="text" id="t-search" placeholder="🔍 Поиск по имени..." data-i18n-ph="t-search-placeholder" oninput="teacherRenderTable()">
                 <select id="t-grade-filter" onchange="teacherRenderTable()">
-                    <option value="">Все оценки</option>
-                    <option value="5">Оценка 5</option>
-                    <option value="4">Оценка 4</option>
-                    <option value="3">Оценка 3</option>
-                    <option value="2">Оценка 2</option>
+                    <option value="" data-i18n="t-all-grades">Все оценки</option>
+                    <option value="5" data-i18n="t-grade-5">Оценка 5</option>
+                    <option value="4" data-i18n="t-grade-4">Оценка 4</option>
+                    <option value="3" data-i18n="t-grade-3">Оценка 3</option>
+                    <option value="2" data-i18n="t-grade-2">Оценка 2</option>
                 </select>
+                <button class="btn" style="background:#0f766e; margin-left:auto;" onclick="teacherExportCSV()" data-i18n="t-export">⬇ Скачать Excel</button>
             </div>
             <div class="t-table-wrap">
                 <table>
                     <thead>
                         <tr>
-                            <th>#</th><th>Ученик</th><th>Тема</th><th>Результат</th><th>Прогресс</th><th>Оценка</th><th>Время</th>
+                            <th>#</th><th data-i18n="t-col-student">Ученик</th><th data-i18n="t-col-topic">Тема</th><th data-i18n="t-col-result">Результат</th><th data-i18n="t-col-progress">Прогресс</th><th data-i18n="t-col-grade">Оценка</th><th data-i18n="t-col-leaves">Выходы</th><th data-i18n="t-col-time">Время</th>
                         </tr>
                     </thead>
                     <tbody id="t-results-body"></tbody>
                 </table>
-                <div id="t-empty" class="t-empty" style="display:none;">📭 Пока нет результатов. Как только ученики сдадут тест — они появятся здесь.</div>
+                <div id="t-empty" class="t-empty" style="display:none;" data-i18n="t-empty-msg">📭 Пока нет результатов. Как только ученики сдадут тест — они появятся здесь.</div>
             </div>
         </div>
 
         <div id="tab-variants" style="display:none;">
-            <div class="variant-creator">
-                <h3>➕ Создать новый вариант</h3>
+            <div class="variant-creator" id="variant-creator">
+                <h3 id="vc-heading" data-i18n="vc-title">➕ Создать новый вариант</h3>
                 <div class="vc-name-row">
-                    <input type="text" id="vc-name" placeholder="Название варианта (например: Контроль №5 — Алгебра)">
-                    <input type="text" id="vc-subject" placeholder="Предмет (math / phys)">
+                    <input type="text" id="vc-name" maxlength="80" placeholder="Название варианта" data-i18n-ph="vc-name-ph">
                 </div>
-                <p style="color:#C084FC; font-size:13px; margin-bottom:14px; font-weight:700;">
-                    📝 Для каждого вопроса выберите тип: <b>Тест</b> (A/B/C/D/E) или <b>Ответ</b> (свободный текст)
-                </p>
+                <div class="vc-settings">
+                    <label><span data-i18n="vc-subject">Предмет</span>
+                        <select id="vc-subject">
+                            <option value="math" data-i18n="vc-subj-math">📐 Математика</option>
+                            <option value="phys" data-i18n="vc-subj-phys">⚡ Физика</option>
+                            <option value="custom" data-i18n="vc-subj-custom">📘 Другой</option>
+                        </select>
+                    </label>
+                    <label><span data-i18n="vc-count">Вопросов</span>
+                        <input type="number" id="vc-count" min="1" max="40" value="15" onchange="setVcCount(this.value)">
+                    </label>
+                    <label><span data-i18n="vc-time">Время (мин)</span>
+                        <input type="number" id="vc-time" min="1" max="240" value="60">
+                    </label>
+                    <label class="vc-check"><input type="checkbox" id="vc-strict" checked onchange="document.getElementById('vc-max-leaves').disabled=!this.checked"> <span data-i18n="vc-strict">🔒 Строгий режим</span></label>
+                    <label><span data-i18n="vc-max-leaves">Завершить после выходов:</span>
+                        <input type="number" id="vc-max-leaves" min="1" max="20" value="3">
+                    </label>
+                </div>
+                <p class="vc-hint" data-i18n="vc-hint">Для каждого вопроса напишите текст и/или прикрепите картинку.</p>
 
-                <div style="background:rgba(168,85,247,0.08); border:2px dashed rgba(168,85,247,0.35); border-radius:16px; padding:22px; margin-bottom:20px;">
-                    <p style="color:#E9D5FF; font-weight:800; font-size:15px; margin-bottom:6px;">🖼 Загрузить изображения вопросов</p>
-                    <div style="display:flex; gap:10px; flex-wrap:wrap; align-items:center;">
-                        <label for="vc-images" style="background:var(--gradient); color:white; padding:10px 20px; border-radius:12px; cursor:pointer; font-weight:800; font-size:14px; transition:all 0.2s; display:inline-block;">
-                            📁 Выбрать файлы (до 15)
-                        </label>
-                        <input type="file" id="vc-images" accept="image/*" multiple style="position:absolute; width:1px; height:1px; opacity:0; pointer-events:none;">
-                        <span id="vc-img-count" style="color:#C084FC; font-size:13px; font-weight:700;">Не выбрано</span>
-                    </div>
-                    <div id="vc-img-preview" style="display:flex; flex-wrap:wrap; gap:10px; margin-top:14px;"></div>
-                    <div id="vc-img-names" style="margin-top:12px; font-size:11px; color:#A855F7; font-family:monospace; line-height:1.8;"></div>
+                <div class="vc-bulk">
+                    <p class="vc-bulk-title" data-i18n="vc-bulk-title">🖼 Загрузить сразу несколько картинок</p>
+                    <p class="vc-bulk-desc" data-i18n="vc-bulk-desc">Картинки встанут по порядку в вопросы, где картинки ещё нет.</p>
+                    <label for="vc-images" class="vc-file-btn" data-i18n="vc-bulk-btn">📁 Выбрать файлы</label>
+                    <input type="file" id="vc-images" accept="image/*" multiple class="visually-hidden">
                 </div>
 
-                <div class="vc-grid" id="vc-answers-grid"></div>
+                <div class="vc-questions" id="vc-questions"></div>
                 <div style="display:flex; gap:10px; flex-wrap:wrap;">
-                    <button class="btn" style="background:var(--gradient);" onclick="saveTeacherVariant()">💾 Сохранить вариант</button>
-                    <button class="btn" style="background:#334155;" onclick="clearVariantForm()">🗑 Очистить</button>
+                    <button class="btn" style="background:var(--gradient);" onclick="saveTeacherVariant()" data-i18n="vc-save">💾 Сохранить вариант</button>
+                    <button class="btn" style="background:#334155;" onclick="clearVariantForm()" data-i18n="vc-clear">🗑 Очистить</button>
+                    <button class="btn" id="vc-cancel-edit" style="background:#334155; display:none;" onclick="clearVariantForm()" data-i18n="vc-cancel-edit">✖ Отменить редактирование</button>
                 </div>
             </div>
 
             <div id="saved-variants-list">
-                <h3 style="font-size:16px; color:#C084FC; font-weight:800; margin-bottom:14px;">📁 Сохранённые варианты</h3>
+                <h3 style="font-size:16px; color:#C084FC; font-weight:800; margin-bottom:14px;" data-i18n="sv-title">📁 Сохранённые варианты</h3>
                 <div class="saved-variants" id="sv-cards"></div>
-                <div id="sv-empty" style="text-align:center; padding:40px; color:#C084FC; font-size:15px; font-weight:600; display:none;">
-                    📭 Еще нету сохранённых вариантов
-                </div>
+                <div id="sv-empty" style="text-align:center; padding:40px; color:#C084FC; font-size:15px; font-weight:600; display:none;" data-i18n="sv-empty">📭 Ещё нет сохранённых вариантов</div>
             </div>
         </div>
     </section>
@@ -836,6 +410,7 @@
     <script src="js/app.js"></script>
     <script src="js/lessons.js"></script>
     <script src="js/quiz.js"></script>
+    <script src="js/anticheat.js"></script>
     <script src="js/teacher.js"></script>
     <script src="js/theme.js"></script>
     <script src="js/main.js"></script>

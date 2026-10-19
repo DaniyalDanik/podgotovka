@@ -13,7 +13,7 @@ const LESSON_CONTENT = {
             <div class="lesson-tasks">
                 <p>1. 20% от 500 = <input id="l3-ans-1" class="lesson-input"></p>
                 <p>2. 10% от 3000 = <input id="l3-ans-2" class="lesson-input"></p>
-                <p>3. 1000 под 10% = <input id="l3-ans-3" class="lesson-input"></p>
+                <p>3. 1000 под 10% на 1 год = <input id="l3-ans-3" class="lesson-input"></p>
             </div>
             <button class="btn" style="background:green;" onclick="checkLesson(3)">Проверить</button>`,
 
@@ -46,7 +46,7 @@ const LESSON_CONTENT = {
                 <p>2. x² - 6x + 9 → корни: <input id="l5-ans-2" class="lesson-input"></p>
                 <p>3. x² - 5x + 6 → корни: <input id="l5-ans-3" class="lesson-input"></p>
             </div>
-            <p style="font-size:14px;color:gray;">Пиши через запятую: например 2,3</p>
+            <p style="font-size:14px;color:gray;">Пиши корни через запятую: например 2,3 (порядок не важен)</p>
             <button class="btn" style="background:green;" onclick="checkLesson(5)">Проверить</button>`,
 
         6: `<h2>📈 Квадратная функция (график)</h2>
@@ -81,18 +81,21 @@ const LESSON_CONTENT = {
             </div>
             <button class="btn" style="background:green;" onclick="checkLesson(7)">Проверить</button>`,
 
-        8: `<h2>📊 Неравенства (система)</h2>
-            <p><b>Неравенство</b> — это когда числа не равны:</p>
-            <div class="lesson-box">> больше<br>&lt; меньше<br>≥ больше или равно<br>≤ меньше или равно</div>
-            <h3>📌 Главное правило</h3>
-            <div class="lesson-box">Если умножаешь или делишь на отрицательное число → знак меняется!</div>
+        8: `<h2>🧩 Системы неравенств</h2>
+            <p><b>Система неравенств</b> — это несколько неравенств, которые должны выполняться <b>одновременно</b>. Записывается с фигурной скобкой.</p>
+            <div class="lesson-box">{ x > 2<br>{ x &lt; 7 &nbsp;&nbsp;→&nbsp;&nbsp; 2 &lt; x &lt; 7</div>
+            <h3>📌 Как решать</h3>
+            <div class="lesson-box">1) Реши каждое неравенство отдельно<br>2) Нарисуй оба ответа на одной числовой прямой<br>3) Ответ — <b>общая часть</b> (пересечение)</div>
             <h3>🧠 Примеры</h3>
-            <p>1) x + 3 > 5 → x > 2</p><p>2) 2x &lt; 10 → x &lt; 5</p><p>3) -2x > 6 → x &lt; -3</p>
+            <p>1) { x + 1 > 3, x − 4 &lt; 1 } → x > 2 и x &lt; 5 → <b>2 &lt; x &lt; 5</b>. Целые решения: 3, 4 (их 2).</p>
+            <p>2) { 3x ≥ 6, x ≤ 4 } → x ≥ 2 и x ≤ 4 → <b>2 ≤ x ≤ 4</b>. Скобка квадратная: 2 и 4 входят.</p>
+            <p>3) { x > 5, x &lt; 1 } → общей части нет → <b>решений нет</b>.</p>
+            <div class="lesson-box">Строгий знак (&gt;, &lt;) — точка «пустая», число не входит.<br>Нестрогий (≥, ≤) — точка «закрашена», число входит.</div>
             <h3>🏋️ Попробуй сам:</h3>
             <div class="lesson-tasks">
-                <p>1. x + 5 > 10 → x > <input id="l8-ans-1" class="lesson-input"></p>
-                <p>2. 3x &lt; 12 → x &lt; <input id="l8-ans-2" class="lesson-input"></p>
-                <p>3. -2x > 8 → x &lt; <input id="l8-ans-3" class="lesson-input"></p>
+                <p>1. { x + 1 > 4, x − 2 &lt; 5 } → сколько целых решений? <input id="l8-ans-1" class="lesson-input"></p>
+                <p>2. { 2x ≥ 6, x ≤ 5 } → наименьшее целое решение = <input id="l8-ans-2" class="lesson-input"></p>
+                <p>3. { x > 4, x &lt; 1 } → сколько решений? <input id="l8-ans-3" class="lesson-input"></p>
             </div>
             <button class="btn" style="background:green;" onclick="checkLesson(8)">Проверить</button>`,
 
@@ -205,7 +208,7 @@ const LESSON_CONTENT = {
             <div class="lesson-tasks">
                 <p>1. 500-дің 20% = <input id="l3-ans-1" class="lesson-input"></p>
                 <p>2. 3000-ның 10% = <input id="l3-ans-2" class="lesson-input"></p>
-                <p>3. 1000 × 10% = <input id="l3-ans-3" class="lesson-input"></p>
+                <p>3. 1000, жылдық 10%, 1 жылдан кейін = <input id="l3-ans-3" class="lesson-input"></p>
             </div>
             <button class="btn" style="background:green;" onclick="checkLesson(3)">Тексеру</button>`,
 
@@ -238,7 +241,7 @@ const LESSON_CONTENT = {
                 <p>2. x² - 6x + 9 → түбірлер: <input id="l5-ans-2" class="lesson-input"></p>
                 <p>3. x² - 5x + 6 → түбірлер: <input id="l5-ans-3" class="lesson-input"></p>
             </div>
-            <p style="font-size:14px;color:gray;">Үтірмен жаз: мысалы 2,3</p>
+            <p style="font-size:14px;color:gray;">Түбірлерді үтірмен жаз: мысалы 2,3 (реті маңызды емес)</p>
             <button class="btn" style="background:green;" onclick="checkLesson(5)">Тексеру</button>`,
 
         6: `<h2>📈 Квадрат функция (график)</h2>
@@ -273,18 +276,21 @@ const LESSON_CONTENT = {
             </div>
             <button class="btn" style="background:green;" onclick="checkLesson(7)">Тексеру</button>`,
 
-        8: `<h2>📊 Теңсіздіктер жүйесі</h2>
-            <p><b>Теңсіздік</b> — сандар тең емес кезде:</p>
-            <div class="lesson-box">> үлкен<br>&lt; кіші<br>≥ үлкен немесе тең<br>≤ кіші немесе тең</div>
-            <h3>📌 Басты ереже</h3>
-            <div class="lesson-box">Теріс санға көбейтсек немесе бөлсек → белгі өзгереді!</div>
+        8: `<h2>🧩 Теңсіздіктер жүйесі</h2>
+            <p><b>Теңсіздіктер жүйесі</b> — бір мезгілде <b>бірге</b> орындалуы керек бірнеше теңсіздік. Фигуралық жақшамен жазылады.</p>
+            <div class="lesson-box">{ x > 2<br>{ x &lt; 7 &nbsp;&nbsp;→&nbsp;&nbsp; 2 &lt; x &lt; 7</div>
+            <h3>📌 Қалай шығарамыз</h3>
+            <div class="lesson-box">1) Әр теңсіздікті жеке шеш<br>2) Екі жауапты бір сан түзуіне сыз<br>3) Жауап — <b>ортақ бөлік</b> (қиылысу)</div>
             <h3>🧠 Мысалдар</h3>
-            <p>1) x + 3 > 5 → x > 2</p><p>2) 2x &lt; 10 → x &lt; 5</p><p>3) -2x > 6 → x &lt; -3</p>
+            <p>1) { x + 1 > 3, x − 4 &lt; 1 } → x > 2 және x &lt; 5 → <b>2 &lt; x &lt; 5</b>. Бүтін шешімдер: 3, 4 (2 шешім).</p>
+            <p>2) { 3x ≥ 6, x ≤ 4 } → x ≥ 2 және x ≤ 4 → <b>2 ≤ x ≤ 4</b>. Жақша квадрат: 2 мен 4 кіреді.</p>
+            <p>3) { x > 5, x &lt; 1 } → ортақ бөлік жоқ → <b>шешімі жоқ</b>.</p>
+            <div class="lesson-box">Қатаң белгі (&gt;, &lt;) — нүкте «бос», сан кірмейді.<br>Қатаң емес (≥, ≤) — нүкте «боялған», сан кіреді.</div>
             <h3>🏋️ Өзің байқа:</h3>
             <div class="lesson-tasks">
-                <p>1. x + 5 > 10 → x > <input id="l8-ans-1" class="lesson-input"></p>
-                <p>2. 3x &lt; 12 → x &lt; <input id="l8-ans-2" class="lesson-input"></p>
-                <p>3. -2x > 8 → x &lt; <input id="l8-ans-3" class="lesson-input"></p>
+                <p>1. { x + 1 > 4, x − 2 &lt; 5 } → неше бүтін шешім бар? <input id="l8-ans-1" class="lesson-input"></p>
+                <p>2. { 2x ≥ 6, x ≤ 5 } → ең кіші бүтін шешім = <input id="l8-ans-2" class="lesson-input"></p>
+                <p>3. { x > 4, x &lt; 1 } → неше шешім бар? <input id="l8-ans-3" class="lesson-input"></p>
             </div>
             <button class="btn" style="background:green;" onclick="checkLesson(8)">Тексеру</button>`,
 

@@ -52,15 +52,11 @@ function sha256Utf8(str) { return sha256(unescape(encodeURIComponent(str))); }
 
 function normAns(a) { return String(a == null ? '' : a).toUpperCase().trim(); }
 
-// (см. answers_utils)
-
 function hashAnswerMap(subject, map) {
     const out = {};
     Object.keys(map || {}).forEach(k => { if (normAns(map[k]) !== '') out[k] = ansHash(subject, k, map[k]); });
     return out;
 }
-
-// (см. answers_utils)
 
 // Для тестовых вопросов (A–E) можно показать верную букву после ответа
 function revealTestAnswer(subject, n) {
@@ -139,20 +135,66 @@ function showToast(msg, type) {
     setTimeout(() => { el.classList.add('toast-out'); setTimeout(() => el.remove(), 300); }, 3000);
 }
 
+// ===== Оценка по проценту (одна функция на весь сайт) =====
+function gradeFor(percent) { return percent >= 85 ? 5 : percent >= 65 ? 4 : percent >= 40 ? 3 : 2; }
+
 // ===== Гибкая проверка ответов =====
 // Ответ приводится к единому виду: без пробелов и регистра, «;» и «,» как разделитель,
 // «×», «·» как «*», длинное тире как «-». Запятая может быть и десятичной: 3,375 = 3.375
-function canonAns(a) {
+// Дополнительно: x² → X^2, 10⁻³ → 10^-3, 1×10^4 → 10^4, 5.3x10^3 → 5.3*10^3
+const SUPERSCRIPTS = { '⁰': '0', '¹': '1', '²': '2', '³': '3', '⁴': '4', '⁵': '5', '⁶': '6', '⁷': '7', '⁸': '8', '⁹': '9', '⁻': '-' };
+function baseNorm(a) {
     return String(a == null ? '' : a).toUpperCase().replace(/\s+/g, '')
-        .replace(/[×·⋅∙]/g, '*').replace(/[−–—]/g, '-').replace(/;/g, ',');
-}
-// Два прочтения ответа ученика: запятая — разделитель ИЛИ десятичная запятая
-function answerCandidates(a) {
-    const s = String(a == null ? '' : a).toUpperCase().replace(/\s+/g, '')
         .replace(/[×·⋅∙]/g, '*').replace(/[−–—]/g, '-');
-    return [s.replace(/;/g, ','), s.replace(/,/g, '.').replace(/;/g, ',')];
 }
-function answerMatches(input, correct) { return answerCandidates(input).includes(canonAns(correct)); }
+function mathNorm(s) {
+    return s
+        .replace(/[⁰¹²³⁴⁵⁶⁷⁸⁹⁻]+/g, m => '^' + Array.from(m).map(c => SUPERSCRIPTS[c]).join(''))
+        .replace(/\^\((-?\d+)\)/g, '^$1')                 // 10^(-3) → 10^-3
+        .replace(/(\d)[XХ](?=10\^)/g, '$1*')              // 5.3x10^3 → 5.3*10^3
+        .replace(/(^|[^\d.])1\*10\^/g, '$110^');           // 1*10^4 → 10^4
+}
+function canonAns(a) { return mathNorm(baseNorm(a)).replace(/;/g, ','); }
+// Старый вид (без mathNorm) — им посчитаны хеши в data/answers.js, поэтому пробуем оба
+function canonAnsLegacy(a) { return baseNorm(a).replace(/;/g, ','); }
+// Прочтения ответа ученика: запятая — разделитель ИЛИ десятичная запятая
+function answerCandidates(a) {
+    const out = new Set();
+    [baseNorm(a), mathNorm(baseNorm(a))].forEach(s => {
+        out.add(s.replace(/;/g, ','));
+        out.add(s.replace(/,/g, '.').replace(/;/g, ','));
+    });
+    return Array.from(out);
+}
+// Число из строки: 3, -2.5, 3,5, 8/3 → число; иначе NaN
+function parseNumAns(s) {
+    s = baseNorm(s).replace(',', '.');
+    if (/^-?\d+(\.\d+)?$/.test(s)) return Number(s);
+    const m = s.match(/^(-?\d+)\/(\d+)$/);
+    return m && Number(m[2]) !== 0 ? Number(m[1]) / Number(m[2]) : NaN;
+}
+// Сравнение одного ответа с одним правильным (для уроков, где ответы открыты)
+function answerMatchesOne(input, correct) {
+    const want = canonAns(correct);
+    const cands = answerCandidates(input);
+    if (cands.includes(want)) return true;
+    // список корней в любом порядке: «5,2» = «2;5», «3» = «3;3»
+    if (String(correct).includes(';')) {
+        const set = s => Array.from(new Set(s.split(',').filter(Boolean))).sort().join(',');
+        if (cands.some(c => set(c) === set(want))) return true;
+    }
+    // числа: 2.666 ≈ 2.67, 1/2 = 0.5
+    const c = parseNumAns(correct), v = parseNumAns(input);
+    if (!isFinite(c) || !isFinite(v)) return false;
+    const dec = (String(correct).split('.')[1] || '').length;
+    if (dec > 0) return Math.abs(v - c) <= 0.5 * Math.pow(10, -dec) + 1e-9;
+    // для целых и дробей принимаем десятичную запись (0.5 = 1/2), но не «несокращённую» дробь
+    return !String(input).includes('/') && Math.abs(v - c) < 1e-9;
+}
+// correct может быть строкой или массивом допустимых ответов
+function answerMatches(input, correct) {
+    return (Array.isArray(correct) ? correct : [correct]).some(c => answerMatchesOne(input, c));
+}
 function ansHash(subject, n, a) { return sha256Utf8('pdg|' + subject + '|' + n + '|' + canonAns(a)); }
 function isCorrectAnswer(subject, n, a) {
     const h = ALL_ANSWERS[subject] && ALL_ANSWERS[subject][n];
