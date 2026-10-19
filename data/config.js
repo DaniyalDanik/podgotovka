@@ -1,5 +1,5 @@
 // Настройки: адрес для результатов, список учителей, хеш кода учителя, длительность экзамена
-const RESULTS_ENDPOINT = ''; // адрес Cloudflare Worker из telegram-worker.js, например: 'https://results.ВАШ-ПОДДОМЕН.workers.dev'
+const RESULTS_ENDPOINT = 'https://podgotovka-results.daniyal-bolat27.workers.dev';
 
 const TEACHERS = ['Учитель 1', 'Учитель 2', 'Учитель 3', 'Учитель 4', 'Учитель 5'];
 
