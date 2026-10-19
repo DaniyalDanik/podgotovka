@@ -1,0 +1,418 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Подготовка - Твой путь к успеху</title>
+    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22%3E%3Ctext y=%22.9em%22 font-size=%2290%22%3E%F0%9F%8E%93%3C/text%3E%3C/svg%3E">
+</head>
+<body>
+    <div class="bg-blob bg-blob-1"></div>
+    <div class="bg-blob bg-blob-2"></div>
+    <div class="bg-blob bg-blob-3"></div>
+    <div class="stars" id="stars-container"></div>
+
+    <div id="infoModal" class="modal">
+        <div class="modal-content">
+            <span class="close-modal" onclick="closeModal()">&times;</span>
+            <div id="modalTitle" style="font-size: 24px; font-weight: 800; margin-bottom: 20px; color: var(--dark-blue);"></div>
+            <div id="modalBody" style="font-size: 18px; line-height: 1.6;"></div>
+            <button class="btn" style="background: var(--primary-blue); margin-top: 25px;" onclick="closeModal();" data-i18n="back-menu">Вернуться / Закрыть</button>
+        </div>
+    </div>
+
+    <div id="uiModal" class="modal">
+        <div class="modal-content ui-modal-content">
+            <div id="uiModalText" class="ui-modal-text"></div>
+            <div class="ui-modal-actions">
+                <button id="uiModalCancel" class="btn btn-ghost" onclick="uiClose(false)" style="display:none;"></button>
+                <button id="uiModalOk" class="btn" style="background: var(--primary-blue);" onclick="uiClose(true)">OK</button>
+            </div>
+        </div>
+    </div>
+
+    <header class="top-navbar">
+        <div style="display:flex; align-items:center; gap:10px;">
+            <button class="back-btn-float" id="back-btn-nav" onclick="goBack()">← <span data-i18n="nav-back">Назад</span></button>
+            <div class="logo-box" onclick="showPage('home-page')">Подготовка</div>
+        </div>
+        <nav class="nav-links">
+            <a onclick="showPage('home-page')" data-i18n="nav-home">Home</a>
+            <a onclick="showPage('teacher-login-page')" style="background:rgba(255,255,255,0.15); border-radius:6px;" data-i18n="t-nav-link">👩‍🏫 Учитель</a>
+            <a onclick="showPage('subject-selection')" data-i18n="nav-subjects">Предметы</a>
+            <div class="lang-switcher">
+                <button class="lang-btn active" id="lang-ru" onclick="setLanguage('ru')">RU</button>
+                <button class="lang-btn" id="lang-kk" onclick="setLanguage('kk')">KZ</button>
+                <button class="theme-toggle" id="theme-btn" onclick="toggleTheme()" title="Сменить тему" data-i18n-title="theme-title">☀️</button>
+            </div>
+        </nav>
+    </header>
+
+    <section id="login-page" style="display: flex; flex-direction: column; align-items: center; justify-content: center; height: calc(100vh - 65px);">
+        <h2 style="font-size: 32px; color: #ffffff; margin-bottom: 10px;" data-i18n="login-welcome">Добро пожаловать!</h2>
+        <p style="margin-bottom: 25px; font-size: 18px; color: var(--text-gray);" data-i18n="login-desc">Введи своё имя и выбери учителя.</p>
+        <input type="text" id="studentName" placeholder="Имя и фамилия" data-i18n-ph="login-name-ph" maxlength="60" autocomplete="name" style="padding: 15px; font-size: 18px; border-radius: 10px; border: 2px solid var(--primary-blue); margin-bottom: 15px; width: 300px; text-align: center; outline: none;">
+        <select id="teacherSelect" style="padding: 15px; font-size: 16px; border-radius: 10px; border: 2px solid var(--primary-blue); margin-bottom: 20px; width: 300px; outline: none; font-family: inherit; color: var(--text-dark);">
+            <option value="" data-i18n="login-teacher-ph">— Выбери учителя —</option>
+            <!-- список учителей берётся из TEACHERS в data/config.js -->
+        </select>
+        <button class="btn" style="background: var(--primary-blue); font-size: 18px; padding: 15px 40px;" onclick="registerStudent()" data-i18n="login-btn">Войти</button>
+    </section>
+
+    <section id="home-page" style="display: flex;">
+        <div class="hero-content">
+            <h1 class="hero-title" data-i18n="hero-title"><span>Подготовка</span><br>к успеху</h1>
+            <p style="font-size: 18px; color: var(--text-gray); margin-bottom: 30px;" data-i18n="hero-desc">Твой персональный помощник в подготовке к экзаменам.</p>
+            <button class="btn" style="background:var(--primary-blue); padding: 15px 40px; font-size: 18px; font-weight: 800;" onclick="showPage('subject-selection')" data-i18n="start-btn">Начать обучение</button>
+        </div>
+        <div class="hero-visual">
+            <div class="hero-visual-inner">
+                <div class="circle-text">ПОДГОТОВКА</div>
+            </div>
+        </div>
+        <div class="home-footer">✦ created by <span>Daniyal</span></div>
+    </section>
+
+    <section id="subject-selection">
+        <h2 style="font-size: 34px; color: #ffffff; margin-bottom: 10px; font-family: 'Space Grotesk', sans-serif; font-weight: 700;" data-i18n="subject-title">Какой предмет учим сегодня?</h2>
+        <p style="color: var(--text-gray); font-size: 15px; margin-bottom: 44px; font-weight: 600;" data-i18n="subject-sub">Выбери и начни прямо сейчас</p>
+        <div class="selection-container">
+            <div class="subject-card math-card" onclick="selectBaseSubject('math')">
+                <div class="subject-icon">📐</div>
+                <h3 data-i18n="math">Математика</h3>
+                <p data-i18n="math-desc">Алгебра и логика</p>
+                <div class="card-glow"></div>
+            </div>
+            <div class="subject-card phys-card" onclick="selectBaseSubject('phys')">
+                <div class="subject-icon">⚡</div>
+                <h3 data-i18n="phys">Физика</h3>
+                <p data-i18n="phys-desc">Законы природы</p>
+                <div class="card-glow"></div>
+            </div>
+        </div>
+        <div class="subject-decoration">
+            <div class="deco-orb"></div>
+            <div class="deco-orb"></div>
+            <div class="deco-orb"></div>
+            <div class="deco-orb"></div>
+            <span class="deco-label" data-i18n="deco-label">Выбери свой путь</span>
+        </div>
+    </section>
+
+    <section id="mode-selection">
+        <h2 style="font-size: 32px; color: #ffffff; margin-bottom: 30px;" data-i18n="mode-title">Выбери режим</h2>
+        <div class="selection-container">
+            <div class="card" onclick="selectMode('prep')"><h3 data-i18n="mode-prep">📚 Подготовка</h3><p data-i18n="mode-prep-desc">С решениями и подсказками</p></div>
+            <div class="card" onclick="selectMode('test')"><h3 data-i18n="mode-test">⏱ Экзамен</h3><p data-i18n="mode-test-desc">60 минут, без подсказок</p></div>
+        </div>
+    </section>
+
+    <section id="topic-selection">
+        <h2 style="font-size: 32px; color: #ffffff; margin-bottom: 10px;" data-i18n="topic-title">Чему хочешь научиться?</h2>
+        <div class="topic-list" id="topic-container"></div>
+        
+        <h2 style="font-size: 28px; color: #ffffff; margin-top: 60px; margin-bottom: 20px;" data-i18n="review-formulas">Повторить формулы</h2>
+        <div class="selection-container" style="margin-top: 20px; gap: 20px;">
+            <div class="card" style="width: 300px; padding: 25px;" onclick="openFormulas('short_mult')">
+                <h3 data-i18n="form-short" style="font-size: 17px;">🧮 Формулы сокращенного умножения</h3>
+            </div>
+            <div class="card" style="width: 300px; padding: 25px;" onclick="openFormulas('trig')">
+                <h3 data-i18n="form-trig" style="font-size: 17px;">📐 Формулы тригонометрии</h3>
+            </div>
+            <div class="card" style="width: 300px; padding: 25px;" onclick="openFormulas('info')">
+                <h3 data-i18n="form-info" style="font-size: 17px;">💻 Формулы информатики</h3>
+            </div>
+            <div class="card" style="width: 300px; padding: 25px;" onclick="openFormulas('phys')">
+                <h3 data-i18n="form-phys" style="font-size: 17px;">⚡ Формулы физики</h3>
+            </div>
+        </div>
+    </section>
+
+    <section id="lesson-page" style="text-align: left; padding: 40px 15%; display: none;">
+        
+        <div id="lesson-1" class="quiz-container lesson-text" style="display: none;">
+            <h2 data-i18n="les-t1">⚡️ Что такое корень? (Простыми словами)</h2>
+            <p data-i18n="les-p1">Представь, что <b>возведение в квадрат</b> — это действие, которое превращает число в площадь квадрата.</p>
+            <p data-i18n="les-p2"><b>Извлечение корня</b> — это обратное действие. Мы пытаемся угадать сторону квадрата по его площади.</p>
+            <div class="lesson-box" data-i18n="les-b1">&radic;25 = 5 (потому что 5 &middot; 5 = 25)</div>
+
+            <h3 data-i18n="les-rules">Главные правила:</h3>
+            <ul>
+                <li data-i18n="les-r1"><b>Корень — это вопрос:</b> «Какое число нужно умножить само на себя?»</li>
+                <li data-i18n="les-r2"><b>Отрицательные числа:</b> Под корнем не может стоять минус.</li>
+                <li data-i18n="les-r3"><b>Корень из нуля:</b> &radic;0 = 0.</li>
+            </ul>
+
+            <h2 data-i18n="les-t2">🛠 Основные свойства</h2>
+            <ul>
+                <li data-i18n="les-prop1"><b>Умножение:</b> &radic;a &middot; &radic;b = &radic;(a &middot; b)</li>
+                <li data-i18n="les-prop2"><b>Деление:</b> &radic;a / &radic;b = &radic;(a / b)</li>
+                <li data-i18n="les-prop3"><b>Квадрат:</b> (&radic;a)&sup2; = a</li>
+            </ul>
+
+            <h2 data-i18n="les-t4">🏋️‍♂️ Твои 10 упражнений</h2>
+            <div class="lesson-tasks">
+                <h3 data-i18n="les-base">Базовый уровень:</h3>
+                <p>1. &radic;81 = <input type="text" id="l1-ans-1" class="lesson-input"></p>
+                <p>2. &radic;16 + &radic;49 = <input type="text" id="l1-ans-2" class="lesson-input"></p>
+                <p>3. &radic;2 &middot; &radic;8 = <input type="text" id="l1-ans-3" class="lesson-input"></p>
+                <p>4. (&radic;13)&sup2; = <input type="text" id="l1-ans-4" class="lesson-input"></p>
+                <p>5. &radic;(100 - 64) = <input type="text" id="l1-ans-5" class="lesson-input"></p>
+
+                <h3 style="margin-top:30px;" data-i18n="les-hard">🔥 Уровень «Хард»:</h3>
+                <p>6. 3&radic;5 + 4&radic;5 = <input type="text" id="l1-ans-6" class="lesson-input" style="width: 60px;">&radic;5</p>
+                <p>7. &radic;20 + &radic;5 = <input type="text" id="l1-ans-7" class="lesson-input" style="width: 60px;">&radic;5</p>
+                <p>8. &radic;18 - &radic;2 = <input type="text" id="l1-ans-8" class="lesson-input" style="width: 60px;">&radic;2</p>
+                <p>9. &radic;75 / &radic;3 = <input type="text" id="l1-ans-9" class="lesson-input"></p>
+                <p>10. (&radic;2 + &radic;2)&sup2; = <input type="text" id="l1-ans-10" class="lesson-input"></p>
+            </div>
+            
+            <div style="margin-top: 30px; display: flex; gap: 15px;">
+                <button class="btn" style="background:var(--success); font-size: 18px;" onclick="checkLesson(1)" data-i18n="les-btn-check">Проверить ответы</button>
+                <button class="btn" style="background:var(--primary-blue); font-size: 18px;" onclick="showPage('variant-selection')" data-i18n="les-btn-next">Перейти к вариантам →</button>
+            </div>
+        </div>
+
+        <div id="lesson-2" class="quiz-container lesson-text" style="display: none;">
+            <h2 data-i18n="les2-t1">🍕 Что такое дробь? (Простыми словами)</h2>
+            <p data-i18n="les2-p1">Дробь — это просто кусочек от чего-то целого. Верхнее число (<b>числитель</b>) показывает, сколько кусочков мы взяли. Нижнее (<b>знаменатель</b>) — на сколько кусочков разрезали пиццу.</p>
+            <div class="lesson-box">
+                <span class="frac"><span class="num">1</span><span class="den">2</span></span> — <span data-i18n="les2-b1">это одна половинка пиццы (разрезали на 2, взяли 1).</span>
+            </div>
+
+            <h2 data-i18n="les2-denom-title">🔍 Как найти общий знаменатель?</h2>
+            <p data-i18n="les2-denom-desc">Чтобы <b>сложить</b> или <b>вычесть</b> дроби, они должны быть одного "размера" (одинаковый низ).</p>
+            
+            <h3 data-i18n="les2-step-title">Самый простой способ (Крест-накрест):</h3>
+            <div class="lesson-box" style="font-weight: normal;">
+                <span data-i18n="les2-step-1">1. Умножь низ первой на низ второй. Это твой <b>новый низ</b>.</span><br><br>
+                <span data-i18n="les2-step-2">2. Умножь числители крест-накрест и сложи их.</span>
+            </div>
+
+            <p style="font-size: 24px; font-weight: bold; text-align: center; margin: 20px 0;">
+                <span class="frac"><span class="num">1</span><span class="den">2</span></span> + 
+                <span class="frac"><span class="num">1</span><span class="den">3</span></span> = 
+                <span style="font-size: 16px; color: var(--text-gray);" data-i18n="les2-denom-logic">умножаем низы (2×3=6)</span> = 
+                <span class="frac"><span class="num">3 + 2</span><span class="den">6</span></span> = 
+                <span class="frac"><span class="num">5</span><span class="den">6</span></span>
+            </p>
+
+            <h2 data-i18n="les2-t2">🛠 Главные правила (Твои инструменты)</h2>
+            <ul>
+                <li style="margin-bottom: 15px;">
+                    <span data-i18n="les2-prop1"><b>Сложение и вычитание:</b> Складывать можно только куски одинакового размера! Нужно найти <b>общий знаменатель</b>.</span><br>
+                    <i><span data-i18n="ex">Пример:</span> <span class="frac"><span class="num">1</span><span class="den">5</span></span> + <span class="frac"><span class="num">2</span><span class="den">5</span></span> = <span class="frac"><span class="num">3</span><span class="den">5</span></span>.</i>
+                </li>
+                <li style="margin-bottom: 15px;">
+                    <span data-i18n="les2-prop2"><b>Умножение:</b> Тут всё просто. Верх умножаем на верх, низ на низ.</span><br>
+                    <i><span data-i18n="ex">Пример:</span> <span class="frac"><span class="num">1</span><span class="den">2</span></span> &middot; <span class="frac"><span class="num">3</span><span class="den">4</span></span> = <span class="frac"><span class="num">3</span><span class="den">8</span></span>.</i>
+                </li>
+                <li style="margin-bottom: 15px;">
+                    <span data-i18n="les2-prop3"><b>Деление:</b> Вторую дробь переворачиваем вверх ногами, а знак деления меняем на умножение.</span><br>
+                    <i><span data-i18n="ex">Пример:</span> <span class="frac"><span class="num">1</span><span class="den">2</span></span> : <span class="frac"><span class="num">1</span><span class="den">3</span></span> = <span class="frac"><span class="num">1</span><span class="den">2</span></span> &middot; <span class="frac"><span class="num">3</span><span class="den">1</span></span> = <span class="frac"><span class="num">3</span><span class="den">2</span></span>.</i>
+                </li>
+            </ul>
+
+            <h2 data-i18n="les-t4">🏋️‍♂️ Твои 10 упражнений</h2>
+            <p data-i18n="les2-p7">Попробуй решить их самостоятельно. Ответ пиши через слеш (/), например: <b>1/2</b>. Если получается целое число, пиши просто цифру.</p>
+            
+            <div class="lesson-tasks">
+                <h3 data-i18n="les-base">Базовый уровень:</h3>
+                <p>1. <span class="frac"><span class="num">1</span><span class="den">7</span></span> + <span class="frac"><span class="num">2</span><span class="den">7</span></span> = <input type="text" id="l2-ans-1" class="lesson-input" style="width: 100px;"></p>
+                <p>2. <span class="frac"><span class="num">5</span><span class="den">8</span></span> - <span class="frac"><span class="num">2</span><span class="den">8</span></span> = <input type="text" id="l2-ans-2" class="lesson-input" style="width: 100px;"></p>
+                <p>3. <span class="frac"><span class="num">1</span><span class="den">2</span></span> &middot; <span class="frac"><span class="num">1</span><span class="den">3</span></span> = <input type="text" id="l2-ans-3" class="lesson-input" style="width: 100px;"></p>
+                <p>4. <span class="frac"><span class="num">3</span><span class="den">5</span></span> &middot; <span class="frac"><span class="num">5</span><span class="den">3</span></span> = <input type="text" id="l2-ans-4" class="lesson-input" style="width: 100px;"></p>
+                <p>5. <span class="frac"><span class="num">2</span><span class="den">9</span></span> : <span class="frac"><span class="num">1</span><span class="den">4</span></span> = <input type="text" id="l2-ans-5" class="lesson-input" style="width: 100px;"></p>
+
+                <h3 style="margin-top:30px;" data-i18n="les-hard">🔥 Уровень «Хард»:</h3>
+                <p>6. <span class="frac"><span class="num">1</span><span class="den">2</span></span> + <span class="frac"><span class="num">1</span><span class="den">3</span></span> = <input type="text" id="l2-ans-6" class="lesson-input" style="width: 100px;"></p>
+                <p>7. <span class="frac"><span class="num">3</span><span class="den">4</span></span> - <span class="frac"><span class="num">1</span><span class="den">2</span></span> = <input type="text" id="l2-ans-7" class="lesson-input" style="width: 100px;"></p>
+                <p>8. (<span class="frac"><span class="num">1</span><span class="den">2</span></span> + <span class="frac"><span class="num">1</span><span class="den">2</span></span>) &middot; 5 = <input type="text" id="l2-ans-8" class="lesson-input" style="width: 100px;"></p>
+                <p>9. 1 : <span class="frac"><span class="num">1</span><span class="den">5</span></span> = <input type="text" id="l2-ans-9" class="lesson-input" style="width: 100px;"></p>
+                <p>10. <span class="frac"><span class="num">2</span><span class="den">3</span></span> &middot; <span class="frac"><span class="num">3</span><span class="den">4</span></span> = <input type="text" id="l2-ans-10" class="lesson-input" style="width: 100px;"> <span style="font-size:14px; color:var(--text-gray); margin-left:10px;" data-i18n="les2-hint">(сократи ответ)</span></p>
+            </div>
+            
+            <div style="margin-top: 30px; display: flex; gap: 15px;">
+                <button class="btn" style="background:var(--success); font-size: 18px;" onclick="checkLesson(2)" data-i18n="les-btn-check">Проверить ответы</button>
+                <button class="btn" style="background:var(--primary-blue); font-size: 18px;" onclick="showPage('variant-selection')" data-i18n="les-btn-next">Перейти к вариантам →</button>
+            </div>
+        </div>
+        <!-- Уроки 3–15 подставляются из data/lessons.js (RU/KZ) -->
+        <div id="lesson-3" class="quiz-container lesson-text" style="display: none;"></div>
+        <div id="lesson-4" class="quiz-container lesson-text" style="display: none;"></div>
+        <div id="lesson-5" class="quiz-container lesson-text" style="display: none;"></div>
+        <div id="lesson-6" class="quiz-container lesson-text" style="display: none;"></div>
+        <div id="lesson-7" class="quiz-container lesson-text" style="display: none;"></div>
+        <div id="lesson-8" class="quiz-container lesson-text" style="display: none;"></div>
+        <div id="lesson-9" class="quiz-container lesson-text" style="display: none;"></div>
+        <div id="lesson-10" class="quiz-container lesson-text" style="display: none;"></div>
+        <div id="lesson-11" class="quiz-container lesson-text" style="display: none;"></div>
+        <div id="lesson-12" class="quiz-container lesson-text" style="display: none;"></div>
+        <div id="lesson-13" class="quiz-container lesson-text" style="display: none;"></div>
+        <div id="lesson-14" class="quiz-container lesson-text" style="display: none;"></div>
+        <div id="lesson-15" class="quiz-container lesson-text" style="display: none;"></div>
+    </section>
+
+    <section id="variant-selection">
+        <h2 style="font-size: 32px; color: #ffffff; margin-bottom: 30px;" data-i18n="variant-title">Выбери вариант</h2>
+        <div class="selection-container" id="variant-cards-container">
+            <!-- Filled dynamically by renderVariantSelection() -->
+        </div>
+    </section>
+
+    <section id="quiz-page">
+        <div id="timer-display" class="timer-bar" style="display: none;">60:00</div>
+        <div class="quiz-container">
+            <h2 id="quiz-title" style="margin-bottom: 25px; text-align: center;">Предмет</h2>
+            <div id="strict-banner" class="strict-banner" style="display:none;"></div>
+            <div class="grid" id="question-grid"></div>
+            <div class="task-view" id="current-question-view" style="display: none;">
+                <h3 id="q-title">№1</h3>
+                <div id="q-content" style="margin-top: 20px;"></div>
+                <div id="options-btns" class="options-btns"></div>
+                <div class="action-buttons" style="margin-top: 20px; display: flex; gap: 10px;">
+                    <button class="btn" style="background:#0ea5e9;" id="help-btn" onclick="showTheory(currentQuestionNum)" data-i18n="help-btn">📚 Помощь с темой</button>
+                </div>
+                <div class="nav-controls">
+                    <button class="btn-nav" id="prev-btn" onclick="navQuestion(-1)" data-i18n="prev-btn">← Назад</button>
+                    <button class="btn btn-finish" id="finish-btn" style="display:none" onclick="confirmFinish()" data-i18n="finish-btn">Завершить тест</button>
+                    <button class="btn-nav" id="next-btn" onclick="navQuestion(1)" data-i18n="next-btn">Вперед →</button>
+                </div>
+            </div>
+        </div>
+    </section>
+
+
+    <section id="teacher-login-page">
+        <div id="teacher-password-block" style="display:flex; flex-direction:column; align-items:center;">
+            <h2 style="font-size:28px; color: #ffffff; margin-bottom:8px;" data-i18n="t-panel-title">Панель учителя</h2>
+            <p style="color:var(--text-gray); font-size:16px; margin-bottom:20px;" data-i18n="t-code-desc">Введите код доступа</p>
+            <input type="password" id="teacher-code-input" placeholder="••••••••••" style="padding:15px; font-size:18px; border-radius:10px; border:2px solid var(--primary-blue); margin-bottom:12px; width:280px; text-align:center; outline:none;" onkeydown="if(event.key==='Enter') checkTeacherCode()">
+            <p id="teacher-code-error" style="color:var(--danger); font-size:14px; margin-bottom:10px; display:none;" data-i18n="t-wrong-code">❌ Неверный код</p>
+            <button class="btn" style="background:var(--primary-blue); font-size:16px; padding:13px 40px;" onclick="checkTeacherCode()" data-i18n="t-enter-btn">Войти</button>
+        </div>
+        <div id="teacher-select-block" style="display:none; flex-direction:column; align-items:center; width:100%;">
+            <h2 style="font-size:28px; color: #ffffff; margin-bottom:8px;" data-i18n="t-select-title">Выберите себя</h2>
+            <p style="color:var(--text-gray); font-size:16px; margin-bottom:0;" data-i18n="t-select-desc">Нажмите на своё имя</p>
+            <div class="teacher-cards-grid" id="teacher-cards-container"></div>
+        </div>
+    </section>
+
+    <section id="teacher-dashboard-page">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:25px; flex-wrap:wrap; gap:10px;">
+            <div>
+                <h2 id="t-dash-title" style="font-size:24px; color:var(--dark-blue);"></h2>
+                <p id="t-dash-sub" style="color:var(--text-gray); font-size:13px; margin-top:3px;"></p>
+            </div>
+            <div style="display:flex; gap:10px;">
+                <button class="btn btn-danger" onclick="teacherClear()" data-i18n="t-clear-btn">🗑 Очистить</button>
+                <button class="btn" style="background:#64748b;" onclick="showPage('teacher-login-page')" data-i18n="t-back-btn">← Назад</button>
+            </div>
+        </div>
+
+        <div class="stats-row">
+            <div class="stat-card"><div class="snum" id="t-stat-count">0</div><div class="slabel" data-i18n="t-stat-tests">Сдано тестов</div></div>
+            <div class="stat-card"><div class="snum" id="t-stat-grade">—</div><div class="slabel" data-i18n="t-stat-avg-grade">Средняя оценка</div></div>
+            <div class="stat-card"><div class="snum" id="t-stat-pct">—</div><div class="slabel" data-i18n="t-stat-avg-pct">Средний %</div></div>
+            <div class="stat-card"><div class="snum" id="t-stat-students">0</div><div class="slabel" data-i18n="t-stat-students">Учеников</div></div>
+        </div>
+
+        <div class="t-tabs">
+            <button class="t-tab active" id="tab-results-btn" onclick="switchTeacherTab('results')" data-i18n="t-tab-results">📊 Результаты</button>
+            <button class="t-tab" id="tab-variants-btn" onclick="switchTeacherTab('variants')" data-i18n="t-tab-variants">✏️ Мои варианты</button>
+        </div>
+
+        <div id="tab-results">
+            <div class="t-filters">
+                <input type="text" id="t-search" placeholder="🔍 Поиск по имени..." data-i18n-ph="t-search-placeholder" oninput="teacherRenderTable()">
+                <select id="t-grade-filter" onchange="teacherRenderTable()">
+                    <option value="" data-i18n="t-all-grades">Все оценки</option>
+                    <option value="5" data-i18n="t-grade-5">Оценка 5</option>
+                    <option value="4" data-i18n="t-grade-4">Оценка 4</option>
+                    <option value="3" data-i18n="t-grade-3">Оценка 3</option>
+                    <option value="2" data-i18n="t-grade-2">Оценка 2</option>
+                </select>
+                <button class="btn" style="background:#0f766e; margin-left:auto;" onclick="teacherExportCSV()" data-i18n="t-export">⬇ Скачать Excel</button>
+            </div>
+            <div class="t-table-wrap">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>#</th><th data-i18n="t-col-student">Ученик</th><th data-i18n="t-col-topic">Тема</th><th data-i18n="t-col-result">Результат</th><th data-i18n="t-col-progress">Прогресс</th><th data-i18n="t-col-grade">Оценка</th><th data-i18n="t-col-leaves">Выходы</th><th data-i18n="t-col-time">Время</th>
+                        </tr>
+                    </thead>
+                    <tbody id="t-results-body"></tbody>
+                </table>
+                <div id="t-empty" class="t-empty" style="display:none;" data-i18n="t-empty-msg">📭 Пока нет результатов. Как только ученики сдадут тест — они появятся здесь.</div>
+            </div>
+        </div>
+
+        <div id="tab-variants" style="display:none;">
+            <div class="variant-creator" id="variant-creator">
+                <h3 id="vc-heading" data-i18n="vc-title">➕ Создать новый вариант</h3>
+                <div class="vc-name-row">
+                    <input type="text" id="vc-name" maxlength="80" placeholder="Название варианта" data-i18n-ph="vc-name-ph">
+                </div>
+                <div class="vc-settings">
+                    <label><span data-i18n="vc-subject">Предмет</span>
+                        <select id="vc-subject">
+                            <option value="math" data-i18n="vc-subj-math">📐 Математика</option>
+                            <option value="phys" data-i18n="vc-subj-phys">⚡ Физика</option>
+                            <option value="custom" data-i18n="vc-subj-custom">📘 Другой</option>
+                        </select>
+                    </label>
+                    <label><span data-i18n="vc-count">Вопросов</span>
+                        <input type="number" id="vc-count" min="1" max="40" value="15" onchange="setVcCount(this.value)">
+                    </label>
+                    <label><span data-i18n="vc-time">Время (мин)</span>
+                        <input type="number" id="vc-time" min="1" max="240" value="60">
+                    </label>
+                    <label class="vc-check"><input type="checkbox" id="vc-strict" checked onchange="document.getElementById('vc-max-leaves').disabled=!this.checked"> <span data-i18n="vc-strict">🔒 Строгий режим</span></label>
+                    <label><span data-i18n="vc-max-leaves">Завершить после выходов:</span>
+                        <input type="number" id="vc-max-leaves" min="1" max="20" value="3">
+                    </label>
+                </div>
+                <p class="vc-hint" data-i18n="vc-hint">Для каждого вопроса напишите текст и/или прикрепите картинку.</p>
+
+                <div class="vc-bulk">
+                    <p class="vc-bulk-title" data-i18n="vc-bulk-title">🖼 Загрузить сразу несколько картинок</p>
+                    <p class="vc-bulk-desc" data-i18n="vc-bulk-desc">Картинки встанут по порядку в вопросы, где картинки ещё нет.</p>
+                    <label for="vc-images" class="vc-file-btn" data-i18n="vc-bulk-btn">📁 Выбрать файлы</label>
+                    <input type="file" id="vc-images" accept="image/*" multiple class="visually-hidden">
+                </div>
+
+                <div class="vc-questions" id="vc-questions"></div>
+                <div style="display:flex; gap:10px; flex-wrap:wrap;">
+                    <button class="btn" style="background:var(--gradient);" onclick="saveTeacherVariant()" data-i18n="vc-save">💾 Сохранить вариант</button>
+                    <button class="btn" style="background:#334155;" onclick="clearVariantForm()" data-i18n="vc-clear">🗑 Очистить</button>
+                    <button class="btn" id="vc-cancel-edit" style="background:#334155; display:none;" onclick="clearVariantForm()" data-i18n="vc-cancel-edit">✖ Отменить редактирование</button>
+                </div>
+            </div>
+
+            <div id="saved-variants-list">
+                <h3 style="font-size:16px; color:#C084FC; font-weight:800; margin-bottom:14px;" data-i18n="sv-title">📁 Сохранённые варианты</h3>
+                <div class="saved-variants" id="sv-cards"></div>
+                <div id="sv-empty" style="text-align:center; padding:40px; color:#C084FC; font-size:15px; font-weight:600; display:none;" data-i18n="sv-empty">📭 Ещё нет сохранённых вариантов</div>
+            </div>
+        </div>
+    </section>
+
+
+    <script src="data/config.js"></script>
+    <script src="data/translations.js"></script>
+    <script src="data/theory.js"></script>
+    <script src="data/formulas.js"></script>
+    <script src="data/lessons.js"></script>
+    <script src="data/answers.js"></script>
+    <script src="js/utils.js"></script>
+    <script src="js/app.js"></script>
+    <script src="js/lessons.js"></script>
+    <script src="js/quiz.js"></script>
+    <script src="js/anticheat.js"></script>
+    <script src="js/teacher.js"></script>
+    <script src="js/theme.js"></script>
+    <script src="js/main.js"></script>
+</body>
+</html>
