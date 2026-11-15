@@ -115,7 +115,7 @@ function showQuestion(num) {
         optionTexts = q ? q.options : {};
         let html = '';
         if (q && q.text) html += `<div class="q-text">${escapeHtml(q.text).replace(/\n/g, '<br>')}</div>`;
-        const img = v && v.imagePrefix ? localStorage.getItem('img_' + v.imagePrefix + num) : null;
+        const img = variantImage(v, num);
         if (img && /^data:image\//.test(img)) html += `<img src="${img}" alt="№${num}" draggable="false">`;
         if (!html) html = questionPlaceholder('📝', tr('Вопрос', 'Сұрақ') + ' №' + num,
             v ? '' : tr('Вариант не найден на этом устройстве', 'Нұсқа бұл құрылғыда табылмады'));
@@ -376,6 +376,15 @@ function loadExamState() {
 function checkExamResume() {
     const st = loadExamState();
     if (!st) return;
+    // Вариант учителя из общей базы: сначала загружаем его с сервера
+    if (isCustomSubject(st.subject) && !findVariantById(st.subject) && CLOUD.on) {
+        cloudVariant(st.subject).then(() => checkExamResumeLoaded(st))
+            .catch(() => checkExamResumeLoaded(st));
+        return;
+    }
+    checkExamResumeLoaded(st);
+}
+function checkExamResumeLoaded(st) {
     const apply = () => {
         currentBaseSubject = st.base || 'math'; currentSubject = st.subject; currentMode = 'test';
         ensureAnswersLoaded(st.subject);

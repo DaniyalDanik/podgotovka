@@ -79,8 +79,17 @@ function safeJSON(key, fallback) {
 // Короткий выбор строки по языку интерфейса
 function tr(ru, kk) { return (typeof currentLang !== 'undefined' && currentLang === 'kk') ? kk : ru; }
 
-// Ищет вариант учителя по id среди ВСЕХ учителей (а не только текущего)
+// Ищет вариант учителя по id: сначала в общей базе (уже загруженный), потом в браузере
 function findVariantById(id) {
+    if (typeof CLOUD !== 'undefined' && CLOUD.full[id]) return CLOUD.full[id];
+    try {
+        const raw = sessionStorage.getItem('cv_' + id);
+        if (raw && typeof rememberVariant === 'function') return rememberVariant(JSON.parse(raw));
+    } catch (e) {}
+    return findLocalVariant(id);
+}
+// Вариант, сохранённый только в этом браузере (старый способ хранения)
+function findLocalVariant(id) {
     for (const k of Object.keys(localStorage)) {
         if (!k.startsWith('teacher_variants_')) continue;
         const v = safeJSON(k, []).find(x => x && x.id === id);
@@ -88,11 +97,18 @@ function findVariantById(id) {
     }
     return null;
 }
+// Картинка вопроса: из общей базы (v.images) или из памяти браузера
+function variantImage(v, n) {
+    if (!v) return null;
+    if (v.images && v.images[n]) return v.images[n];
+    return v.imagePrefix ? localStorage.getItem('img_' + v.imagePrefix + n) : null;
+}
 // Подгружает хеши ответов авторского варианта, если их ещё нет в памяти
 function ensureAnswersLoaded(subject) {
     if (ALL_ANSWERS[subject]) return;
     const v = findVariantById(subject);
-    if (v) ALL_ANSWERS[subject] = hashAnswerMap(subject, v.answers);
+    if (!v) return;
+    ALL_ANSWERS[subject] = v.answersHash || hashAnswerMap(subject, v.answers);
 }
 
 // ===== Красивые окна вместо alert/confirm =====

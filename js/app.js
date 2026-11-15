@@ -84,6 +84,7 @@ function registerStudent() {
 
 window.onload = function() {
     fillTeacherSelect();
+    flushPendingResults();
     const savedName = localStorage.getItem('studentName');
     const savedTeacher = localStorage.getItem('studentTeacher');
     const loginTime = localStorage.getItem('loginTime');
@@ -105,59 +106,77 @@ window.onload = function() {
 // ===== Уведомления учителю (через прокси telegram-worker.js) =====
 // type: 'start' — ученик начал экзамен, 'leave' — вышел со вкладки, 'result' — итог
 function notifyTeacher(type, data) {
-    if (!RESULTS_ENDPOINT) return;
+    if (!RESULTS_ENDPOINT) return Promise.resolve(false);
     const payload = Object.assign({
         type: type,
         name: localStorage.getItem('studentName') || '',
         teacher: localStorage.getItem('studentTeacher') || ''
     }, data || {});
+    return postEvent(payload);
+}
+
+function postEvent(payload) {
     try {
-        fetch(RESULTS_ENDPOINT, {
+        return fetch(RESULTS_ENDPOINT, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(payload),
             keepalive: true
-        }).catch(() => {});
-    } catch (e) {}
+        }).then(r => r.ok).catch(() => false);
+    } catch (e) { return Promise.resolve(false); }
 }
 
-// extra: { leaves, awaySec, autoFinished, durationSec, variantId }
+// Результаты, которые не удалось отправить (нет интернета): отправим при следующем открытии сайта
+const PENDING_KEY = 'pendingResults';
+function queueResult(payload) {
+    const list = safeJSON(PENDING_KEY, []);
+    list.push(payload);
+    try { localStorage.setItem(PENDING_KEY, JSON.stringify(list.slice(-50))); } catch (e) {}
+}
+function flushPendingResults() {
+    if (!CLOUD.on) return;
+    const list = safeJSON(PENDING_KEY, []);
+    if (!list.length) return;
+    localStorage.removeItem(PENDING_KEY);
+    list.forEach(p => postEvent(p).then(ok => { if (!ok) queueResult(p); }));
+}
+
+// extra: { leaves, awaySec, autoFinished, durationSec }
 function sendResultToTeacher(score, totalQuestions, topicName, extra) {
     extra = extra || {};
     const studentName = localStorage.getItem('studentName') || tr('Неизвестный ученик', 'Белгісіз оқушы');
     const teacherName = localStorage.getItem('studentTeacher') || tr('Без учителя', 'Мұғалімсіз');
     const percent = Math.round((score / totalQuestions) * 100);
     const grade = gradeFor(percent);
-
-    const key = 'results_' + teacherName;
-    const results = safeJSON(key, []);
-    results.push({
-        name: studentName,
-        teacher: teacherName,
-        topic: topicName,
-        score: score,
-        total: totalQuestions,
-        percent: percent,
-        grade: grade,
-        leaves: extra.leaves || 0,
-        awaySec: extra.awaySec || 0,
-        autoFinished: !!extra.autoFinished,
-        durationSec: extra.durationSec || 0,
-        date: new Date().toLocaleString('ru-RU')
-    });
-    try { localStorage.setItem(key, JSON.stringify(results)); } catch (e) {}
-
-    // Токен бота здесь НЕ хранится: уведомление уходит на ваш прокси (telegram-worker.js)
-    notifyTeacher('result', {
-        topic: topicName, score: score, total: totalQuestions, percent: percent, grade: grade,
+    const record = {
+        name: studentName, teacher: teacherName, topic: topicName,
+        score: score, total: totalQuestions, percent: percent, grade: grade,
         leaves: extra.leaves || 0, awaySec: extra.awaySec || 0,
         autoFinished: !!extra.autoFinished, durationSec: extra.durationSec || 0
-    });
+    };
+
+    if (CLOUD.on) {
+        // Результат уходит в общую базу (и уведомлением в Telegram) — учитель увидит его с любого устройства
+        const payload = Object.assign({ type: 'result' }, record);
+        postEvent(payload).then(ok => {
+            if (!ok) {
+                queueResult(payload);
+                showToast(tr('Нет связи с сервером: результат сохранён и будет отправлен позже.',
+                             'Сервермен байланыс жоқ: нәтиже сақталды, кейін жіберіледі.'), 'error');
+            }
+        });
+    } else {
+        // Без сервера — как раньше, в памяти браузера
+        const key = 'results_' + teacherName;
+        const results = safeJSON(key, []);
+        results.push(Object.assign({ date: new Date().toLocaleString('ru-RU') }, record));
+        try { localStorage.setItem(key, JSON.stringify(results)); } catch (e) {}
+    }
 
     const cheer = grade >= 4 ? tr('Отлично', 'Жарайсың') : tr('Готово', 'Дайын');
     showToast(tr(
-        `${cheer}, ${studentName}! Оценка: ${grade} (${score}/${totalQuestions}). Результат сохранён для: ${teacherName}.`,
-        `${cheer}, ${studentName}! Баға: ${grade} (${score}/${totalQuestions}). Нәтиже сақталды: ${teacherName}.`
+        `${cheer}, ${studentName}! Оценка: ${grade} (${score}/${totalQuestions}). Результат отправлен: ${teacherName}.`,
+        `${cheer}, ${studentName}! Баға: ${grade} (${score}/${totalQuestions}). Нәтиже жіберілді: ${teacherName}.`
     ), grade >= 3 ? 'success' : '');
 }
 
@@ -225,10 +244,32 @@ function variantCard(title, desc, onClick, extraClass) {
     return card;
 }
 
+function teacherVariantCard(v, onClick) {
+    const n = variantCount(v);
+    const meta = tr(`от ${v.teacher} · ${n} вопр. · ${variantMinutes(v)} мин`,
+                    `${v.teacher} · ${n} сұрақ · ${variantMinutes(v)} мин`);
+    return variantCard('👩‍🏫 ' + escapeHtml(v.name),
+        `<span style="font-size:12px;">${escapeHtml(meta)}</span>`, onClick, 'card-teacher');
+}
+function variantFitsSubject(v) {
+    return !v.subject || v.subject === currentBaseSubject || v.subject === 'custom';
+}
+
+// Открыть вариант учителя из общей базы
+function openCloudVariant(id) {
+    showToast(tr('Загружаю вариант…', 'Нұсқа жүктелуде…'), '');
+    cloudVariant(id).then(() => {
+        currentSubject = id;
+        startQuiz();
+    }).catch(e => uiAlert(tr('Не удалось загрузить вариант. ', 'Нұсқаны жүктеу мүмкін болмады. ') + cloudErrorText(e)));
+}
+
+let variantRenderToken = 0;
 function renderVariantSelection() {
     const container = document.getElementById('variant-cards-container');
     const t = translations[currentLang];
     container.innerHTML = '';
+    const token = ++variantRenderToken;
 
     if (currentBaseSubject === 'math') {
         [1, 2, 3, 4].forEach(n => container.appendChild(
@@ -236,19 +277,33 @@ function renderVariantSelection() {
     } else if (currentBaseSubject === 'phys') {
         container.appendChild(variantCard(t['var1'], t['var1-desc'], () => { currentSubject = 'phys_v1'; startQuiz(); }));
     }
+
+    // Варианты, сохранённые только в этом браузере (старые)
+    const shown = new Set();
     Object.keys(localStorage).filter(k => k.startsWith('teacher_variants_')).forEach(key => {
         safeJSON(key, []).forEach(v => {
-            if (!v || !v.id) return;
-            if (v.subject && v.subject !== currentBaseSubject && v.subject !== 'custom') return;
-            const n = variantCount(v);
-            const meta = tr(`от ${v.teacher} · ${n} вопр. · ${variantMinutes(v)} мин`,
-                            `${v.teacher} · ${n} сұрақ · ${variantMinutes(v)} мин`);
-            container.appendChild(variantCard(
-                '👩‍🏫 ' + escapeHtml(v.name),
-                `<span style="font-size:12px;">${escapeHtml(meta)}</span>`,
-                () => { ALL_ANSWERS[v.id] = hashAnswerMap(v.id, v.answers); currentSubject = v.id; startQuiz(); },
-                'card-teacher'));
+            if (!v || !v.id || !variantFitsSubject(v)) return;
+            shown.add(v.id);
+            container.appendChild(teacherVariantCard(v,
+                () => { ALL_ANSWERS[v.id] = hashAnswerMap(v.id, v.answers); currentSubject = v.id; startQuiz(); }));
         });
+    });
+
+    // Варианты учителей из общей базы
+    if (!CLOUD.on) return;
+    const loading = document.createElement('div');
+    loading.className = 'variants-loading';
+    loading.textContent = tr('⏳ Загружаю варианты учителей…', '⏳ Мұғалімдердің нұсқалары жүктелуде…');
+    container.appendChild(loading);
+    cloudIndex().then(list => {
+        if (token !== variantRenderToken) return;           // страницу уже перерисовали
+        loading.remove();
+        list.filter(v => v && v.id && !shown.has(v.id) && variantFitsSubject(v))
+            .forEach(v => container.appendChild(teacherVariantCard(v, () => openCloudVariant(v.id))));
+    }).catch(() => {
+        if (token !== variantRenderToken) return;
+        loading.textContent = tr('⚠️ Не удалось загрузить варианты учителей. Проверьте интернет.',
+                                 '⚠️ Мұғалімдердің нұсқаларын жүктеу мүмкін болмады. Интернетті тексеріңіз.');
     });
 }
 

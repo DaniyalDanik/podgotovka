@@ -5,6 +5,7 @@ let teacherRefreshInterval = null;
 function checkTeacherCode() {
     const input = document.getElementById('teacher-code-input').value;
     if (teacherCodeHash(input) === TEACHER_CODE_HASH) {
+        try { sessionStorage.setItem('teacherCode', input); } catch (e) {}   // нужен для записи в общую базу
         document.getElementById('teacher-password-block').style.display = 'none';
         document.getElementById('teacher-select-block').style.display = 'flex';
         buildTeacherCards();
@@ -30,12 +31,36 @@ function teacherLogin(name) {
     currentTeacher = name;
     document.getElementById('t-dash-title').textContent = '👩‍🏫 ' + name;
     showPage('teacher-dashboard-page');
+    teacherResultsCache = [];
+    teacherResultsError = '';
+    teacherCloudVariants = [];
     teacherRenderStats();
     teacherRenderTable();
     loadAllTeacherVariants(name);
     switchTeacherTab('results');
+    teacherLoadResults();
     clearInterval(teacherRefreshInterval);
-    teacherRefreshInterval = setInterval(() => { teacherRenderStats(); teacherRenderTable(); }, 15000);
+    // С общей базой обновляем раз в 30 секунд (бесплатный лимит Cloudflare — 1000 таких запросов в день)
+    teacherRefreshInterval = setInterval(() => {
+        if (CLOUD.on) teacherLoadResults(); else { teacherRenderStats(); teacherRenderTable(); }
+    }, CLOUD.on ? 30000 : 15000);
+}
+
+// ===== Результаты из общей базы =====
+let teacherResultsCache = [];
+let teacherResultsError = '';
+let teacherResultsLoading = false;
+function teacherLoadResults() {
+    if (!CLOUD.on || !currentTeacher || teacherResultsLoading) return Promise.resolve();
+    teacherResultsLoading = true;
+    const who = currentTeacher;
+    return cloudResults(who)
+        .then(list => { if (who === currentTeacher) { teacherResultsCache = list; teacherResultsError = ''; } })
+        .catch(e => { teacherResultsError = cloudErrorText(e); })
+        .then(() => {
+            teacherResultsLoading = false;
+            if (who === currentTeacher && isVisible('teacher-dashboard-page')) { teacherRenderStats(); teacherRenderTable(); }
+        });
 }
 
 // Новые результаты из другой вкладки этого же браузера появляются сразу
@@ -46,6 +71,7 @@ window.addEventListener('storage', e => {
 });
 
 function teacherGetResults() {
+    if (CLOUD.on) return teacherResultsCache.slice().sort((a, b) => (a.ts || 0) - (b.ts || 0));
     return safeJSON('results_' + currentTeacher, []);
 }
 
@@ -59,7 +85,11 @@ function teacherRenderStats() {
     document.getElementById('t-stat-grade').textContent = avgGrade;
     document.getElementById('t-stat-pct').textContent = avgPct;
     document.getElementById('t-stat-students').textContent = students;
-    document.getElementById('t-dash-sub').textContent = translations[currentLang]['t-updated'] + ': ' + new Date().toLocaleTimeString('ru-RU');
+    const sub = document.getElementById('t-dash-sub');
+    sub.textContent = teacherResultsError
+        ? '⚠️ ' + teacherResultsError
+        : (CLOUD.on ? '☁️ ' : '') + translations[currentLang]['t-updated'] + ': ' + new Date().toLocaleTimeString('ru-RU');
+    sub.style.color = teacherResultsError ? '#FDA4AF' : '';
 }
 
 function teacherFilteredResults() {
@@ -124,6 +154,12 @@ function teacherClear() {
     const msg = translations[currentLang]['t-confirm-clear'] + ' (' + currentTeacher + ')';
     uiConfirm(msg).then(ok => {
         if (!ok) return;
+        if (CLOUD.on) {
+            cloudClearResults(currentTeacher)
+                .then(() => { teacherResultsCache = []; teacherRenderStats(); teacherRenderTable(); })
+                .catch(e => uiAlert(cloudErrorText(e)));
+            return;
+        }
         localStorage.removeItem('results_' + currentTeacher);
         teacherRenderStats();
         teacherRenderTable();
@@ -295,6 +331,8 @@ function readVcForm() {
 
 function clearVariantForm() {
     vcEditingId = null;
+    vcEditingSource = null;
+    vcEditingCreated = '';
     vcImages = {};
     document.getElementById('vc-name').value = '';
     document.getElementById('vc-subject').value = 'math';
@@ -316,11 +354,11 @@ function setVcHeading() {
     document.getElementById('vc-cancel-edit').style.display = vcEditingId ? '' : 'none';
 }
 
-function editTeacherVariant(id) {
-    const v = findVariantById(id);
-    if (!v) return;
-    clearVariantForm();
-    vcEditingId = id;
+// Откуда редактируемый вариант: 'cloud' (общая база) или 'local' (только этот браузер)
+let vcEditingSource = null;
+let vcEditingCreated = '';
+
+function fillVariantForm(v) {
     document.getElementById('vc-name').value = v.name || '';
     document.getElementById('vc-subject').value = ['math', 'phys'].includes(v.subject) ? v.subject : 'custom';
     document.getElementById('vc-time').value = variantMinutes(v);
@@ -341,11 +379,31 @@ function editTeacherVariant(id) {
         } else {
             document.getElementById('vc-ans-' + n).value = ans;
         }
-        const img = v.imagePrefix ? localStorage.getItem('img_' + v.imagePrefix + n) : null;
+        const img = variantImage(v, n);
         if (img) { vcImages[n] = img; renderVcImage(n); }
     }
-    setVcHeading();
-    document.getElementById('variant-creator').scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+function editTeacherVariant(id) {
+    const local = findLocalVariant(id);
+    const open = (v, source) => {
+        clearVariantForm();
+        vcEditingId = id;
+        vcEditingSource = source;
+        vcEditingCreated = v.created || '';
+        fillVariantForm(v);
+        setVcHeading();
+        document.getElementById('variant-creator').scrollIntoView({ behavior: 'smooth', block: 'start' });
+    };
+    if (local) { open(local, 'local'); return; }
+    if (!CLOUD.on) return;
+    showToast(tr('Загружаю вариант…', 'Нұсқа жүктелуде…'), '');
+    cloudVariant(id, true).then(v => open(v, 'cloud'))
+        .catch(e => uiAlert(tr('Не удалось открыть вариант. ', 'Нұсқаны ашу мүмкін болмады. ') + cloudErrorText(e)));
+}
+
+function setSaveBusy(busy) {
+    document.querySelectorAll('#variant-creator .btn').forEach(b => { b.disabled = busy; b.style.opacity = busy ? 0.6 : ''; });
 }
 
 function saveTeacherVariant() {
@@ -365,48 +423,21 @@ function saveTeacherVariant() {
         return;
     }
     const doSave = () => {
-        const key = 'teacher_variants_' + currentTeacher;
-        const variants = safeJSON(key, []);
-        const old = vcEditingId ? variants.find(v => v.id === vcEditingId) : null;
-        const variantId = old ? old.id : 'custom_' + Date.now();
-        const teacherSlug = (currentTeacher || 'teacher').replace(/\s+/g, '_');
-        const imagePrefix = old && old.imagePrefix ? old.imagePrefix : `teacher_${teacherSlug}_${variantId}_q`;
-
-        // картинки: сохраняем новые, удаляем убранные
-        let imgFail = 0, imgCount = 0;
-        for (let n = 1; n <= VC_MAX; n++) {
-            const k = 'img_' + imagePrefix + n;
-            if (n <= vcCount && vcImages[n]) {
-                try { if (localStorage.getItem(k) !== vcImages[n]) localStorage.setItem(k, vcImages[n]); imgCount++; }
-                catch (e) { imgFail++; }
-            } else {
-                localStorage.removeItem(k);
-            }
-        }
         const questionTypes = {};
         Object.keys(questions).forEach(n => { questionTypes[n] = questions[n].type; });
-        const timeMin = Math.max(1, Math.min(240, parseInt(document.getElementById('vc-time').value, 10) || 60));
-        const strict = document.getElementById('vc-strict').checked;
-        const maxLeaves = Math.max(1, Math.min(20, parseInt(document.getElementById('vc-max-leaves').value, 10) || 3));
-        const data = {
-            id: variantId, name: name, subject: document.getElementById('vc-subject').value,
-            teacher: currentTeacher, count: vcCount, timeMin: timeMin, strict: strict, maxLeaves: maxLeaves,
+        const base = {
+            id: vcEditingId || 'custom_' + Date.now(),
+            name: name, subject: document.getElementById('vc-subject').value, teacher: currentTeacher,
+            count: vcCount,
+            timeMin: Math.max(1, Math.min(240, parseInt(document.getElementById('vc-time').value, 10) || 60)),
+            strict: document.getElementById('vc-strict').checked,
+            maxLeaves: Math.max(1, Math.min(20, parseInt(document.getElementById('vc-max-leaves').value, 10) || 3)),
             questions: questions, questionTypes: questionTypes, answers: answers,
-            imagePrefix: imagePrefix, imageCount: imgCount, hasImages: imgCount > 0,
-            created: old ? old.created : new Date().toLocaleString('ru-RU'),
-            updated: old ? new Date().toLocaleString('ru-RU') : undefined
+            created: vcEditingId ? (vcEditingCreated || new Date().toLocaleString('ru-RU')) : new Date().toLocaleString('ru-RU'),
+            updated: vcEditingId ? new Date().toLocaleString('ru-RU') : ''
         };
-        const list = old ? variants.map(v => v.id === variantId ? data : v) : variants.concat([data]);
-        try { localStorage.setItem(key, JSON.stringify(list)); }
-        catch (e) { uiAlert(tr('⚠️ Память браузера заполнена — вариант не сохранён. Удалите старые варианты или картинки.', '⚠️ Браузер жады толы — нұсқа сақталмады. Ескі нұсқаларды немесе суреттерді өшіріңіз.')); return; }
-        ALL_ANSWERS[variantId] = hashAnswerMap(variantId, answers);
-
-        uiAlert((old ? tr('✅ Вариант «' + name + '» обновлён!', '✅ «' + name + '» нұсқасы жаңартылды!')
-                     : tr('✅ Вариант «' + name + '» сохранён!', '✅ «' + name + '» нұсқасы сақталды!')) +
-            (imgFail ? '\n' + tr('⚠️ Не удалось сохранить картинок: ' + imgFail + ' (память браузера заполнена).',
-                                  '⚠️ Сақталмаған суреттер: ' + imgFail + ' (браузер жады толы).') : ''));
-        clearVariantForm();
-        renderSavedVariants();
+        if (CLOUD.on) saveVariantToCloud(base);
+        else saveVariantLocally(base);
     };
     if (noContent.length) {
         uiConfirm(tr('В вопросах № ' + noContent.join(', ') + ' нет ни текста, ни картинки (например, если задания на бумаге). Сохранить так?',
@@ -417,33 +448,142 @@ function saveTeacherVariant() {
     }
 }
 
+// Вариант в общей базе: картинки внутри варианта, ответы — открытые (видны только с кодом учителя) и хеши (для учеников)
+function cloudVariantData(base, images) {
+    const data = Object.assign({}, base, { images: {} });
+    for (let n = 1; n <= base.count; n++) if (images[n]) data.images[n] = images[n];
+    data.imageCount = Object.keys(data.images).length;
+    data.answersHash = hashAnswerMap(data.id, base.answers);
+    delete data.imagePrefix;
+    return data;
+}
+
+function saveVariantToCloud(base) {
+    const data = cloudVariantData(base, vcImages);
+    if (JSON.stringify(data).length > 19 * 1024 * 1024) {
+        uiAlert(tr('Вариант слишком большой (больше 19 МБ): уберите часть картинок.', 'Нұсқа тым үлкен (19 МБ-тан көп): суреттердің бір бөлігін алып тастаңыз.'));
+        return;
+    }
+    const wasLocal = vcEditingSource === 'local';
+    setSaveBusy(true);
+    showToast(tr('Сохраняю в общую базу…', 'Ортақ базаға сақталуда…'), '');
+    cloudSaveVariant(data).then(() => {
+        if (wasLocal) removeLocalVariant(data.id);          // перенесли в общую базу — локальная копия не нужна
+        ALL_ANSWERS[data.id] = data.answersHash;
+        uiAlert(base.updated
+            ? tr('✅ Вариант «' + base.name + '» обновлён! Ученики увидят изменения на всех устройствах.', '✅ «' + base.name + '» нұсқасы жаңартылды! Оқушылар өзгерістерді барлық құрылғыда көреді.')
+            : tr('✅ Вариант «' + base.name + '» сохранён в общую базу! Ученики увидят его на своих устройствах.', '✅ «' + base.name + '» нұсқасы ортақ базаға сақталды! Оқушылар оны өз құрылғыларында көреді.'));
+        clearVariantForm();
+        renderSavedVariants();
+    }).catch(e => {
+        uiAlert(tr('⚠️ Вариант не сохранён. ', '⚠️ Нұсқа сақталмады. ') + cloudErrorText(e));
+    }).then(() => setSaveBusy(false));
+}
+
+// Без сервера — как раньше, в памяти браузера
+function saveVariantLocally(base) {
+    const key = 'teacher_variants_' + currentTeacher;
+    const variants = safeJSON(key, []);
+    const old = variants.find(v => v.id === base.id);
+    const teacherSlug = (currentTeacher || 'teacher').replace(/\s+/g, '_');
+    const imagePrefix = old && old.imagePrefix ? old.imagePrefix : `teacher_${teacherSlug}_${base.id}_q`;
+    let imgFail = 0, imgCount = 0;
+    for (let n = 1; n <= VC_MAX; n++) {
+        const k = 'img_' + imagePrefix + n;
+        if (n <= vcCount && vcImages[n]) {
+            try { if (localStorage.getItem(k) !== vcImages[n]) localStorage.setItem(k, vcImages[n]); imgCount++; }
+            catch (e) { imgFail++; }
+        } else {
+            localStorage.removeItem(k);
+        }
+    }
+    const data = Object.assign({}, base, { imagePrefix: imagePrefix, imageCount: imgCount, hasImages: imgCount > 0 });
+    const list = old ? variants.map(v => v.id === base.id ? data : v) : variants.concat([data]);
+    try { localStorage.setItem(key, JSON.stringify(list)); }
+    catch (e) { uiAlert(tr('⚠️ Память браузера заполнена — вариант не сохранён. Удалите старые варианты или картинки.', '⚠️ Браузер жады толы — нұсқа сақталмады. Ескі нұсқаларды немесе суреттерді өшіріңіз.')); return; }
+    ALL_ANSWERS[base.id] = hashAnswerMap(base.id, base.answers);
+    uiAlert((old ? tr('✅ Вариант «' + base.name + '» обновлён!', '✅ «' + base.name + '» нұсқасы жаңартылды!')
+                 : tr('✅ Вариант «' + base.name + '» сохранён!', '✅ «' + base.name + '» нұсқасы сақталды!')) +
+        (imgFail ? '\n' + tr('⚠️ Не удалось сохранить картинок: ' + imgFail + ' (память браузера заполнена).',
+                              '⚠️ Сақталмаған суреттер: ' + imgFail + ' (браузер жады толы).') : ''));
+    clearVariantForm();
+    renderSavedVariants();
+}
+
+function removeLocalVariant(id) {
+    const key = 'teacher_variants_' + currentTeacher;
+    const all = safeJSON(key, []);
+    const gone = all.find(v => v.id === id);
+    if (gone && gone.imagePrefix) for (let i = 1; i <= VC_MAX; i++) localStorage.removeItem('img_' + gone.imagePrefix + i);
+    localStorage.setItem(key, JSON.stringify(all.filter(v => v.id !== id)));
+}
+
+// Перенести вариант, созданный раньше в этом браузере, в общую базу
+function uploadLocalVariant(id) {
+    const v = findLocalVariant(id);
+    if (!v) return;
+    const images = {};
+    for (let n = 1; n <= variantCount(v); n++) { const img = variantImage(v, n); if (img) images[n] = img; }
+    const base = Object.assign({}, v, { teacher: currentTeacher, count: variantCount(v) });
+    if (!base.questions) {
+        base.questions = {};
+        for (let n = 1; n <= base.count; n++) base.questions[n] = customQuestion(v, n);
+    }
+    const data = cloudVariantData(base, images);
+    showToast(tr('Переношу в общую базу…', 'Ортақ базаға көшірілуде…'), '');
+    cloudSaveVariant(data).then(() => {
+        removeLocalVariant(id);
+        showToast(tr('✅ Вариант теперь в общей базе', '✅ Нұсқа енді ортақ базада'), 'success');
+        renderSavedVariants();
+    }).catch(e => uiAlert(tr('⚠️ Не удалось перенести. ', '⚠️ Көшіру мүмкін болмады. ') + cloudErrorText(e)));
+}
+
 function subjectLabel(s) {
     return s === 'math' ? t_('vc-subj-math') : s === 'phys' ? t_('vc-subj-phys') : t_('vc-subj-custom');
 }
 
-function renderSavedVariants() {
-    const variants = safeJSON('teacher_variants_' + currentTeacher, []);
+// Краткие данные варианта для карточки (у вариантов из базы они уже посчитаны сервером)
+function localVariantMeta(v) {
+    return {
+        id: v.id, name: v.name, subject: v.subject, teacher: v.teacher, count: variantCount(v), timeMin: variantMinutes(v),
+        strict: v.strict !== false, maxLeaves: v.maxLeaves || 3, images: v.imageCount || 0,
+        texts: v.questions ? Object.values(v.questions).filter(q => q && q.text).length : 0,
+        answers: Object.values(v.answers || {}).filter(a => a).length,
+        created: v.created || '', updated: v.updated || '', local: true
+    };
+}
+
+let teacherCloudVariants = [];
+let teacherVariantsNote = '';
+
+function drawSavedVariants() {
+    const local = safeJSON('teacher_variants_' + currentTeacher, []).filter(v => v && v.id).map(localVariantMeta);
+    const variants = teacherCloudVariants.concat(local);
     const container = document.getElementById('sv-cards');
     const empty = document.getElementById('sv-empty');
-    if (variants.length === 0) { container.innerHTML = ''; empty.style.display = 'block'; return; }
+    const note = teacherVariantsNote ? `<div class="sv-note">${escapeHtml(teacherVariantsNote)}</div>` : '';
+    if (variants.length === 0) { container.innerHTML = note; empty.style.display = teacherVariantsNote ? 'none' : 'block'; return; }
     empty.style.display = 'none';
-    container.innerHTML = variants.map(v => {
-        const n = variantCount(v);
-        const filled = Object.values(v.answers || {}).filter(a => a).length;
-        const texts = v.questions ? Object.values(v.questions).filter(q => q && q.text).length : 0;
-        const id = escapeHtml(v.id).replace(/'/g, '');
+    container.innerHTML = note + variants.map(m => {
+        const id = escapeHtml(m.id).replace(/'/g, '');
+        const where = m.local
+            ? (CLOUD.on ? `<span class="sv-badge sv-badge-local">💻 ${tr('только на этом устройстве', 'тек осы құрылғыда')}</span>` : '')
+            : `<span class="sv-badge sv-badge-cloud">☁️ ${tr('общая база', 'ортақ база')}</span>`;
+        const upload = m.local && CLOUD.on
+            ? `<button class="sv-btn sv-btn-go" onclick="uploadLocalVariant('${id}')">☁️ ${tr('В общую базу', 'Ортақ базаға')}</button>` : '';
         return `
         <div class="sv-card">
             <div class="sv-info">
-                <div class="sv-name">📋 ${escapeHtml(v.name)}</div>
+                <div class="sv-name">📋 ${escapeHtml(m.name)} ${where}</div>
                 <div class="sv-meta">
-                    ${escapeHtml(subjectLabel(v.subject))} · ${n} ${tr('вопр.', 'сұрақ')} · ⏱ ${variantMinutes(v)} ${tr('мин', 'мин')}
-                    · ${tr('ответов', 'жауап')}: ${filled}/${n} · 📝 ${texts} · 🖼 ${v.imageCount || 0}
-                    · ${v.strict === false ? tr('обычный режим', 'қалыпты режим') : '🔒 ' + tr('строгий', 'қатаң') + ' (' + (v.maxLeaves || 3) + ')'}
-                    <br>${tr('Создан', 'Құрылды')}: ${escapeHtml(v.created || '')}${v.updated ? ' · ' + tr('изменён', 'өзгертілді') + ': ' + escapeHtml(v.updated) : ''}
+                    ${escapeHtml(subjectLabel(m.subject))} · ${m.count} ${tr('вопр.', 'сұрақ')} · ⏱ ${m.timeMin} ${tr('мин', 'мин')}
+                    · ${tr('ответов', 'жауап')}: ${m.answers}/${m.count} · 📝 ${m.texts} · 🖼 ${m.images || 0}
+                    · ${m.strict === false ? tr('обычный режим', 'қалыпты режим') : '🔒 ' + tr('строгий', 'қатаң') + ' (' + (m.maxLeaves || 3) + ')'}
+                    <br>${tr('Создан', 'Құрылды')}: ${escapeHtml(m.created || '')}${m.updated ? ' · ' + tr('изменён', 'өзгертілді') + ': ' + escapeHtml(m.updated) : ''}
                 </div>
             </div>
             <div class="sv-actions">
+                ${upload}
                 <button class="sv-btn sv-btn-go" onclick="previewTeacherVariant('${id}')">👁 ${tr('Просмотр', 'Қарау')}</button>
                 <button class="sv-btn sv-btn-edit" onclick="editTeacherVariant('${id}')">✏️ ${tr('Изменить', 'Өзгерту')}</button>
                 <button class="sv-btn sv-btn-del" onclick="deleteTeacherVariant('${id}')" title="${escapeHtml(tr('Удалить', 'Өшіру'))}">🗑</button>
@@ -452,28 +592,44 @@ function renderSavedVariants() {
     }).join('');
 }
 
+function renderSavedVariants() {
+    if (!CLOUD.on) { teacherCloudVariants = []; teacherVariantsNote = ''; drawSavedVariants(); return; }
+    if (!teacherCloudVariants.length) teacherVariantsNote = tr('⏳ Загружаю варианты из общей базы…', '⏳ Ортақ базадағы нұсқалар жүктелуде…');
+    drawSavedVariants();
+    const who = currentTeacher;
+    cloudIndex(true).then(list => {
+        if (who !== currentTeacher) return;
+        teacherCloudVariants = list.filter(v => v.teacher === currentTeacher);
+        teacherVariantsNote = '';
+    }).catch(e => {
+        teacherVariantsNote = '⚠️ ' + cloudErrorText(e);
+    }).then(() => { if (who === currentTeacher) drawSavedVariants(); });
+}
+
 // Учитель смотрит вариант глазами ученика (в режиме подготовки — без таймера и без записи результата)
 function previewTeacherVariant(id) {
-    const v = findVariantById(id);
-    if (!v) return;
-    ALL_ANSWERS[id] = hashAnswerMap(id, v.answers);
-    currentSubject = id;
-    currentBaseSubject = ['math', 'phys'].includes(v.subject) ? v.subject : 'math';
-    currentMode = 'prep';
-    startQuiz();
+    const start = v => {
+        ALL_ANSWERS[id] = v.answersHash || hashAnswerMap(id, v.answers);
+        currentSubject = id;
+        currentBaseSubject = ['math', 'phys'].includes(v.subject) ? v.subject : 'math';
+        currentMode = 'prep';
+        startQuiz();
+    };
+    const local = findLocalVariant(id);
+    if (local) { start(local); return; }
+    if (!CLOUD.on) return;
+    cloudVariant(id).then(start).catch(e => uiAlert(cloudErrorText(e)));
 }
 
 function deleteTeacherVariant(id) {
-    uiConfirm(tr('Удалить этот вариант?', 'Бұл нұсқаны өшіру керек пе?')).then(ok => {
+    uiConfirm(tr('Удалить этот вариант? Ученики больше не увидят его.', 'Бұл нұсқаны өшіру керек пе? Оқушылар оны енді көрмейді.')).then(ok => {
         if (!ok) return;
-        const key = 'teacher_variants_' + currentTeacher;
-        const all = safeJSON(key, []);
-        const gone = all.find(v => v.id === id);
-        // чистим картинки удалённого варианта, чтобы не забивать память браузера
-        if (gone && gone.imagePrefix) for (let i = 1; i <= VC_MAX; i++) localStorage.removeItem('img_' + gone.imagePrefix + i);
-        localStorage.setItem(key, JSON.stringify(all.filter(v => v.id !== id)));
-        if (vcEditingId === id) clearVariantForm();
-        renderSavedVariants();
+        const done = () => { if (vcEditingId === id) clearVariantForm(); renderSavedVariants(); };
+        if (findLocalVariant(id)) { removeLocalVariant(id); done(); return; }
+        cloudDeleteVariant(id).then(() => {
+            teacherCloudVariants = teacherCloudVariants.filter(v => v.id !== id);
+            done();
+        }).catch(e => uiAlert(tr('⚠️ Не удалось удалить. ', '⚠️ Өшіру мүмкін болмады. ') + cloudErrorText(e)));
     });
 }
 
